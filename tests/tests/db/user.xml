@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dataset>
+    <!-- password: password -->
+    <test8_user id="1" email="yangji25@cse.msu.edu" name="yangji25"
+                password="240a0fe18d809e63f99b31f2229f2417de408b46d4ff91bed22e68d4ed117938"
+                salt="c$)Fb9Rwf%_d_28(" guest="u" />
+    <!-- password: password -->
+    <test8_user id="2" email="greissmo@msu.edu" name="Moritz"
+                password="593221b07d433bdd695f1af0aa29ee6cec365505429fa56885cef4fc86e6f224"
+                salt="y8!p)S6k7L+l~Zfb"  guest="u"/>
+    <!-- password: password -->
+    <test8_user id="3" email="hilljor2@msu.edu" name="Jordan"
+                password="6851b5383aabb1e0d28232b7c4010c52b7920905f1a10d15ccc085c6507baa38"
+                salt="@5#C9M2Z57rx&e#C" guest="u"/>
+    <!-- password: password -->
+    <test8_user id="4" email="hughe211@msu.edu" name="Robert"
+                password="2250c2689f3fff7ed4ec4978bb56e619a32d3bf05f8a0b7d304f992155e755eb"
+                salt="4&u#mFGAsVPq)u!r" guest="u"/>
+    <!-- password: password -->
+    <test8_user id="5" email="littleya@msu.edu" name="Austin"
+                password="22a1e11fc83248c8b9ca0cfd5c9d9a07103d80b48c48634f112478d3cd5d08f3"
+                salt="6vgqK*)^6u^UvjyN" guest="u"/>
+</dataset>
