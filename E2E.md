@@ -37,6 +37,18 @@ Rechecked the same day on `http://127.0.0.1:8092/` after Conduit was renamed Thr
 - Sound is paused on load. A real click starts the loop (`currentTime` moved from about 0.31s to 0.71s) and the control reads Sound on.
 - In the desktop browser the heading read Throughline, the sealed-path sentence was on screen, and Sound changed to Sound on.
 
+## Polish
+
+Checked on 26 September 2026 against `dist/` at `http://127.0.0.1:8093/`, after the public copy was rewritten and boards were randomized. `node test/rules.test.js` passed, including twenty generated seeds that all seal and are not all the same route.
+
+- The title is `Throughline · PhantasyX`. The kicker is Interaction. Visible text does not include Aesthete, Conduit, MySQL, PHP, CC0, Studios, semester, professor, coursework, or study.
+- The page describes the example as interaction craft for PhantasyX, and the footer says the pipe rules began as earlier personal work.
+- The first board’s solution route was `1,0 1,1 2,1 2,0 3,0 4,0 4,1 5,1 6,1`. New board changed it to `1,5 2,5 3,5 4,5 5,5 5,4 4,4 4,3 5,3 6,3`. A third board was `1,3 1,4 2,4 3,4 4,4 4,3 5,3 6,3`.
+- Opening the valve on an unfinished line did not show the celebration and did not play the chime. The status said the valve opened while the line was still unfinished.
+- Watch a finished line ended with the banner “The line is sealed.”, sixteen rising dots, a gold ring on the board, and three chime tones started from that click. The status read “The line is sealed. Every opening meets another opening, and the gauge is connected.”
+- At 390px the heading still fit, the document did not scroll sideways, and the board still had 48 cells.
+- In the desktop browser, New board moved the source and the gold mark, and Watch a finished line ended on the same banner.
+
 ## What this did not do
 
 This pass did not deploy to Cloudflare and did not open `https://throughline.phantasyx.com/`. That name is attached by `npx wrangler deploy` from an account that owns the `phantasyx.com` zone, as written in `HOSTING.md`.

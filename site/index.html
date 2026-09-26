@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Throughline · PhantasyX</title>
-  <meta name="description" content="Throughline is a PhantasyX example: seal a line from a source to a gauge on a shared board. It is hosted at throughline.phantasyx.com and runs entirely in the browser.">
+  <meta name="description" content="Throughline is a small PhantasyX example. Connect a source to a gauge on a shared board, and keep every opening closed. It runs in the browser at throughline.phantasyx.com.">
   <link rel="canonical" href="https://throughline.phantasyx.com/">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23241f1b' width='32' height='32' rx='6'/%3E%3Cpath d='M6 16h20' stroke='%23e4b08a' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,32 +17,35 @@
     <a class="mark" href="https://phantasyx.com/">PhantasyX</a>
     <div class="header-tools">
       <button type="button" id="sound" class="sound" aria-pressed="false" aria-controls="bed">Sound</button>
-      <p class="example-index">Example 03</p>
+      <p class="example-index">An example</p>
     </div>
   </header>
 
   <main>
     <section class="hero">
-      <p class="kicker">Connectivity study</p>
+      <p class="kicker">Interaction</p>
       <h1>Throughline</h1>
-      <p class="lede">Two seats share one board. Each owns a source and a gauge. A pipe can be added only where your own line is still open, and only if the piece opens back into that leak. The line is finished when every opening meets another opening and the gauge is connected.</p>
+      <p class="lede">This is a small example of a system with one clear rule. You connect a source to a gauge. A piece can be added only where your own line is still open, and only if it faces that opening. The line is finished when every opening meets another opening and the gauge is on the line.</p>
     </section>
 
     <section class="stage" aria-label="Playable board">
       <div class="board-column">
         <p id="turn-label" class="turn-label">Your line to move</p>
-        <p id="status" class="status" role="status">The leak beside the source faces west. Fit a piece so it opens west, then click the marked cell.</p>
+        <p id="status" class="status" role="status">The open end beside the source needs a piece that faces it. Turn a piece until it matches, then click the gold mark.</p>
         <div class="panel">
           <div id="board" class="board" role="group" aria-label="Pipe board"></div>
+          <div id="celebrate" class="celebrate" hidden>
+            <p class="celebrate-banner">The line is sealed.</p>
+          </div>
         </div>
-        <p class="legend">The left wheel is the source. The right dial is the gauge. The gold mark is the side the next piece must open. Copper is the upper line. Teal is the lower line.</p>
+        <p class="legend">The wheel on the left is the source. The dial on the right is the gauge. The gold mark shows the side the next piece has to open. Copper is the first line. Teal is the second line, when two people share the board.</p>
       </div>
 
       <aside class="dock" aria-label="Turn controls">
         <ol class="steps">
-          <li>Select a piece that opens toward the gold mark.</li>
-          <li>Click the marked cell. The leak moves to every new open end.</li>
-          <li>Open the valve only when the line is closed through to the gauge.</li>
+          <li>Choose a piece that opens toward the gold mark.</li>
+          <li>Click the marked cell. The open end moves to whatever the new piece leaves uncovered.</li>
+          <li>Open the valve when the line runs all the way to the gauge and nothing is left open.</li>
         </ol>
 
         <div class="mode" role="group" aria-label="How many seats">
@@ -54,77 +57,48 @@
         <div id="hand" class="hand" role="group" aria-label="Available pieces"></div>
         <p id="compass" class="compass"></p>
         <div class="actions">
-          <button type="button" id="fit">Fit the leak</button>
+          <button type="button" id="fit">Fit the opening</button>
           <button type="button" id="rotate">Rotate</button>
           <button type="button" id="discard">Discard</button>
         </div>
 
-        <h2>Commit</h2>
+        <h2>Finish</h2>
         <div class="actions">
-          <button type="button" id="valve" class="is-commit">Open valve</button>
-          <button type="button" id="concede">Concede</button>
+          <button type="button" id="valve" class="is-commit">Open the valve</button>
+          <button type="button" id="concede">Give up</button>
         </div>
-        <p class="hint">Opening the valve on a leak loses the seat. In a two-seat match, the other line takes it.</p>
+        <p class="hint">Opening the valve while something is still open loses the line. If two people are playing, the other person wins.</p>
 
         <div class="actions demo-actions">
-          <button type="button" id="watch">Show a sealed line</button>
-          <button type="button" id="reset">Reset</button>
+          <button type="button" id="watch">Watch a finished line</button>
+          <button type="button" id="reset">New board</button>
         </div>
       </aside>
     </section>
 
     <section class="notes">
       <article>
-        <h2>What the connection is</h2>
-        <p>Each seat is trying to join two fixed ends: a source that opens east, and a gauge inlet that opens west. Pieces in between are caps, elbows, straights, and tees. A finished line has no bare end. That sealed path is the throughline. Running a pipe off the board leaves an opening that can never be capped, so that route cannot win.</p>
+        <h2>How the line works</h2>
+        <p>Each player joins two fixed ends. The source opens toward the board, and the gauge opens back toward the pipes. The pieces are caps, elbows, straights, and tees. A finished line has no bare end. That closed path is the throughline. If a pipe runs off the board, that opening can never be closed, and the line cannot be finished.</p>
       </article>
       <article>
-        <h2>Where the two seats meet</h2>
-        <p>The 2017 study kept the shared turn in MySQL. Each browser talked to a PHP application, and the waiting seat reloaded every two seconds. The browsers never connected to each other. This page is the study rebuilt for a static host: one person plays a single line, or two people pass one device. The board never leaves the browser.</p>
+        <h2>Why it is here</h2>
+        <p>PhantasyX builds custom software. Throughline is here to show a small piece of interaction craft. The rule is visible, the next move is marked, and the board never leaves your browser. One person can play alone. Two people can pass the same device.</p>
       </article>
       <article>
-        <h2>Where it is hosted</h2>
-        <p>The host is <span class="path">throughline.phantasyx.com</span>. The files are static, and the board never leaves the browser. These pipe rules come from the earlier Aesthete study. That PHP match server stays in <a href="https://github.com/Phantasyx/Aesthete">Phantasyx/Aesthete</a>.</p>
+        <h2>A new board each time</h2>
+        <p>New board deals a different route from the source to the gauge. Each route can be finished. Watch a finished line plays one solution, so you can see the rule close without having to find it yourself.</p>
       </article>
     </section>
   </main>
 
   <footer class="colophon">
-    <p><a href="https://phantasyx.com/">PhantasyX</a>. Throughline is an interactive example on <a href="https://throughline.phantasyx.com/">throughline.phantasyx.com</a>. If a credit needs to distinguish the study from the practice, call the study PhantasyX Studios and leave the practice named PhantasyX.</p>
-    <p>Factory ambiance by <a href="https://opengameart.org/content/factory-ambiance">yd</a>, CC0, via OpenGameArt. Sound stays off until you turn it on.</p>
+    <p><a href="https://phantasyx.com/">PhantasyX</a>. Throughline is an interactive example on <a href="https://throughline.phantasyx.com/">throughline.phantasyx.com</a>. The pipe rules began as earlier personal work.</p>
+    <p>The background is factory ambience by <a href="https://opengameart.org/content/factory-ambiance">yd</a>, released into the public domain on OpenGameArt. It stays quiet until you turn sound on.</p>
   </footer>
 
   <audio id="bed" loop preload="none" src="audio/factory.mp3"></audio>
   <script src="rules.js"></script>
   <script src="game.js"></script>
-  <script>
-    (function () {
-      var button = document.getElementById('sound');
-      var bed = document.getElementById('bed');
-      if (!button || !bed) return;
-      bed.volume = 0.35;
-      button.addEventListener('click', function () {
-        if (!bed.paused) {
-          bed.pause();
-          button.setAttribute('aria-pressed', 'false');
-          button.textContent = 'Sound';
-          return;
-        }
-        var started = bed.play();
-        var markOn = function () {
-          button.setAttribute('aria-pressed', 'true');
-          button.textContent = 'Sound on';
-        };
-        if (started && typeof started.then === 'function') {
-          started.then(markOn).catch(function () {
-            button.setAttribute('aria-pressed', 'false');
-            button.textContent = 'Sound unavailable';
-          });
-          return;
-        }
-        markOn();
-      });
-    })();
-  </script>
 </body>
 </html>

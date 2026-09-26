@@ -1,11 +1,10 @@
 /**
- * Throughline board rules, shared by the static demo and the node tests.
- * The coordinates follow the 2017 Aesthete pipe study.
+ * Throughline board rules, shared by the page and the node tests.
  *
- * Coordinates match the 2017 PHP game: x is the column, y is the row.
- * A size of 6 produces an 8 by 6 grid. Each seat has a source on the
- * left and a two-cell gauge on the right. A leak records the opening
- * the next pipe must have in order to connect back into the line.
+ * x is the column and y is the row. A size of 6 produces an 8 by 6 grid.
+ * Each seat has a source on the left and a two-cell gauge on the right.
+ * A leak records the opening the next pipe must have in order to connect
+ * back into the line. A new game builds a fresh route that can be sealed.
  */
 (function (root, factory) {
   var api = factory();
@@ -26,7 +25,7 @@
 
   /**
    * A known sealed route for the upper line on a size-6 board.
-   * Used by "Show a sealed line" and by the rules test.
+   * Kept so tests can replay one fixed layout. New games build their own.
    */
   var UPPER_LINE = [
     { x: 1, y: 0, type: 'straight', rotation: 0 },
@@ -36,6 +35,16 @@
     { x: 5, y: 0, type: 'elbow', rotation: 0 },
     { x: 5, y: 1, type: 'elbow', rotation: 2 },
     { x: 6, y: 1, type: 'straight', rotation: 0 }
+  ];
+
+  var LOWER_LINE = [
+    { x: 1, y: 5, type: 'straight', rotation: 0 },
+    { x: 2, y: 5, type: 'straight', rotation: 0 },
+    { x: 3, y: 5, type: 'straight', rotation: 0 },
+    { x: 4, y: 5, type: 'straight', rotation: 0 },
+    { x: 5, y: 5, type: 'elbow', rotation: 1 },
+    { x: 5, y: 4, type: 'elbow', rotation: 3 },
+    { x: 6, y: 4, type: 'straight', rotation: 0 }
   ];
 
   function cloneOpenings(openings) {
@@ -85,32 +94,204 @@
     return x >= 0 && y >= 0 && x < size + 2 && y < size;
   }
 
-  function seatLayout(index, size) {
-    var mid = size / 2;
-    if (index === 0) {
-      return {
-        source: { x: 0, y: mid - 3 },
-        gaugeTop: { x: size + 1, y: mid - 3 },
-        gaugeBottom: { x: size + 1, y: mid - 2 }
-      };
-    }
-    return {
-      source: { x: 0, y: mid + 2 },
-      gaugeTop: { x: size + 1, y: mid },
-      gaugeBottom: { x: size + 1, y: mid + 1 }
-    };
+  function sameOpenings(a, b) {
+    return a.N === b.N && a.E === b.E && a.S === b.S && a.W === b.W;
   }
 
-  function makeSeat(index, size, rng) {
-    var layout = seatLayout(index, size);
+  function pieceMatching(openings) {
+    var types = ['straight', 'elbow', 'tee', 'cap'];
+    for (var t = 0; t < types.length; t++) {
+      for (var r = 0; r < 4; r++) {
+        var piece = makePiece(types[t], r);
+        if (sameOpenings(piece.openings, openings)) {
+          return piece;
+        }
+      }
+    }
+    return null;
+  }
+
+  function dirBetween(from, to) {
+    if (to.x === from.x && to.y === from.y - 1) return 'N';
+    if (to.x === from.x + 1 && to.y === from.y) return 'E';
+    if (to.x === from.x && to.y === from.y + 1) return 'S';
+    if (to.x === from.x - 1 && to.y === from.y) return 'W';
+    return null;
+  }
+
+  function shuffle(rng, list) {
+    var copy = list.slice();
+    for (var i = copy.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var tmp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = tmp;
+    }
+    return copy;
+  }
+
+  function inPlay(size, x, y) {
+    return x >= 1 && x <= size && y >= 0 && y < size;
+  }
+
+  function findPath(rng, size, start, goal, blocked, minLen, maxLen) {
+    var seen = {};
+    var path = [{ x: start.x, y: start.y }];
+    seen[key(start.x, start.y)] = true;
+
+    function walk() {
+      var here = path[path.length - 1];
+      if (here.x === goal.x && here.y === goal.y && path.length >= minLen) {
+        return true;
+      }
+      if (path.length >= maxLen) {
+        return false;
+      }
+      var dirs = shuffle(rng, DIRS);
+      for (var i = 0; i < dirs.length; i++) {
+        var dir = dirs[i];
+        var nx = here.x + DELTA[dir][0];
+        var ny = here.y + DELTA[dir][1];
+        if (!inPlay(size, nx, ny)) {
+          continue;
+        }
+        if (blocked[key(nx, ny)] || seen[key(nx, ny)]) {
+          continue;
+        }
+        if (nx === goal.x && ny === goal.y && path.length + 1 < minLen) {
+          continue;
+        }
+        path.push({ x: nx, y: ny });
+        seen[key(nx, ny)] = true;
+        if (walk()) {
+          return true;
+        }
+        path.pop();
+        delete seen[key(nx, ny)];
+      }
+      return false;
+    }
+
+    if (!walk()) {
+      return null;
+    }
+    return path.map(function (cell) {
+      return { x: cell.x, y: cell.y };
+    });
+  }
+
+  function stepsFromPath(path, source, gaugeBottom) {
+    var steps = [];
+    for (var i = 0; i < path.length; i++) {
+      var cell = path[i];
+      var openings = { N: false, E: false, S: false, W: false };
+      var back = i === 0 ? dirBetween(cell, source) : dirBetween(cell, path[i - 1]);
+      var forward = i === path.length - 1 ? dirBetween(cell, gaugeBottom) : dirBetween(cell, path[i + 1]);
+      if (!back || !forward || back === forward) {
+        return null;
+      }
+      openings[back] = true;
+      openings[forward] = true;
+      var piece = pieceMatching(openings);
+      if (!piece) {
+        return null;
+      }
+      steps.push({ x: cell.x, y: cell.y, type: piece.type, rotation: piece.rotation });
+    }
+    return steps;
+  }
+
+  function generateSeat(rng, size, blocked) {
+    for (var attempt = 0; attempt < 80; attempt++) {
+      var sy = Math.floor(rng() * size);
+      var gy = 1 + Math.floor(rng() * (size - 1));
+      var source = { x: 0, y: sy };
+      var gaugeBottom = { x: size + 1, y: gy };
+      var gaugeTop = { x: size + 1, y: gy - 1 };
+      var start = { x: 1, y: sy };
+      var goal = { x: size, y: gy };
+      if (blocked[key(source.x, source.y)] || blocked[key(gaugeBottom.x, gaugeBottom.y)] || blocked[key(gaugeTop.x, gaugeTop.y)]) {
+        continue;
+      }
+      if (blocked[key(start.x, start.y)] || blocked[key(goal.x, goal.y)]) {
+        continue;
+      }
+      if (start.x === goal.x && start.y === goal.y) {
+        continue;
+      }
+      var manhattan = Math.abs(goal.x - start.x) + Math.abs(goal.y - start.y);
+      var minLen = manhattan + 1;
+      var path = findPath(rng, size, start, goal, blocked, minLen, minLen + 2);
+      if (!path) {
+        continue;
+      }
+      var steps = stepsFromPath(path, source, gaugeBottom);
+      if (!steps) {
+        continue;
+      }
+      return {
+        source: source,
+        gaugeTop: gaugeTop,
+        gaugeBottom: gaugeBottom,
+        steps: steps
+      };
+    }
+    return null;
+  }
+
+  function occupyLayout(blocked, layout) {
+    blocked[key(layout.source.x, layout.source.y)] = true;
+    blocked[key(layout.gaugeTop.x, layout.gaugeTop.y)] = true;
+    blocked[key(layout.gaugeBottom.x, layout.gaugeBottom.y)] = true;
+    for (var i = 0; i < layout.steps.length; i++) {
+      blocked[key(layout.steps[i].x, layout.steps[i].y)] = true;
+    }
+  }
+
+  function randomLayouts(rng, size, seats) {
+    var blocked = {};
+    var layouts = [];
+    for (var i = 0; i < seats; i++) {
+      var layout = generateSeat(rng, size, blocked);
+      if (!layout) {
+        return null;
+      }
+      layouts.push(layout);
+      occupyLayout(blocked, layout);
+    }
+    return layouts;
+  }
+
+  function classicLayouts(size, seats) {
+    if (size !== 6) {
+      return null;
+    }
+    var layouts = [{
+      source: { x: 0, y: 0 },
+      gaugeTop: { x: size + 1, y: 0 },
+      gaugeBottom: { x: size + 1, y: 1 },
+      steps: UPPER_LINE
+    }];
+    if (seats === 2) {
+      layouts.push({
+        source: { x: 0, y: 5 },
+        gaugeTop: { x: size + 1, y: 3 },
+        gaugeBottom: { x: size + 1, y: 4 },
+        steps: LOWER_LINE
+      });
+    }
+    return layouts;
+  }
+
+  function makeSeat(layout, rng) {
     var hand = [];
     for (var i = 0; i < 5; i++) {
       hand.push(randomPiece(rng));
     }
     return {
-      source: layout.source,
-      gaugeTop: layout.gaugeTop,
-      gaugeBottom: layout.gaugeBottom,
+      source: { x: layout.source.x, y: layout.source.y },
+      gaugeTop: { x: layout.gaugeTop.x, y: layout.gaugeTop.y },
+      gaugeBottom: { x: layout.gaugeBottom.x, y: layout.gaugeBottom.y },
       pipes: [],
       leaks: [{ x: layout.source.x + 1, y: layout.source.y, dir: 'W' }],
       hand: hand,
@@ -192,10 +373,16 @@
     var seats = options.seats === 2 ? 2 : 1;
     var seed = options.seed == null ? (Date.now() >>> 0) : (options.seed >>> 0);
     var rng = mulberry32(seed);
+    var layouts = options.layout === 'classic'
+      ? classicLayouts(size, seats)
+      : randomLayouts(rng, size, seats);
+    if (!layouts) {
+      layouts = classicLayouts(size, seats) || randomLayouts(mulberry32((seed + 1) >>> 0), size, seats);
+    }
     var players = [];
     var occupied = {};
     for (var i = 0; i < seats; i++) {
-      var seat = makeSeat(i, size, rng);
+      var seat = makeSeat(layouts[i], rng);
       players.push(seat);
       occupied[key(seat.source.x, seat.source.y)] = true;
       occupied[key(seat.gaugeTop.x, seat.gaugeTop.y)] = true;
@@ -207,6 +394,11 @@
       size: size,
       seats: seats,
       seed: seed,
+      solutions: layouts.map(function (layout) {
+        return layout.steps.map(function (step) {
+          return { x: step.x, y: step.y, type: step.type, rotation: step.rotation };
+        });
+      }),
       turn: 0,
       players: players,
       occupied: occupied,
@@ -385,6 +577,20 @@
         var result = this.place(step.x, step.y);
         state.holdTurn = false;
         return result;
+      },
+      replay: function (index) {
+        var steps = state.solutions[index];
+        var results = [];
+        state.holdTurn = true;
+        state.turn = index;
+        for (var n = 0; n < steps.length; n++) {
+          var seat = state.players[index];
+          seat.selected = 0;
+          seat.hand[0] = makePiece(steps[n].type, steps[n].rotation);
+          results.push(this.place(steps[n].x, steps[n].y));
+        }
+        state.holdTurn = false;
+        return results;
       }
     };
   }

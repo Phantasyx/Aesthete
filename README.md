@@ -1,12 +1,10 @@
 # Throughline
 
-A static connectivity study for [PhantasyX](https://phantasyx.com/), hosted at [throughline.phantasyx.com](https://throughline.phantasyx.com/).
+A small interactive example for [PhantasyX](https://phantasyx.com/), hosted at [throughline.phantasyx.com](https://throughline.phantasyx.com/).
 
-Each seat owns a source and a gauge on one shared board. A turn places a pipe on a leak in that seat’s own line, or discards the piece. The line counts only when every opening meets another opening and the gauge is connected. Opening the valve while anything is still open loses the seat.
+Each seat owns a source and a gauge on one shared board. A turn places a pipe on an open end in that seat’s own line, or discards the piece. The line counts only when every opening meets another opening and the gauge is connected. Opening the valve while anything is still open loses the line. New board deals a different route, and each route can be finished.
 
-This is not a peer-to-peer network. The pipe rules come from the 2017 Aesthete study, which stored the shared turn in MySQL. Each browser talked to PHP, and the waiting seat reloaded every two seconds. The browsers never connected to each other. That server remains in [Phantasyx/Aesthete](https://github.com/Phantasyx/Aesthete). Throughline plays the same rules in the browser. The board is not uploaded.
-
-The page is a PhantasyX example. PhantasyX Studios is named only in the footer, for this study.
+The page runs in the browser. Nothing is uploaded. The pipe rules began as earlier personal work. An older PHP and MySQL version remains in [Phantasyx/Aesthete](https://github.com/Phantasyx/Aesthete). This page does not use it.
 
 ## Build
 
@@ -26,13 +24,14 @@ python3 -m http.server 8080 --directory dist
 
 Open `http://127.0.0.1:8080/`.
 
-- **One line** is a solo puzzle.
+- **One line** is a solo board.
 - **Two seats** is pass-and-play on one device.
-- **Show a sealed line** walks a finished route from source to gauge.
-- **Fit the leak** selects a piece that can continue the line. You still click the cell to place it.
-- **Sound** starts a looping factory ambience. It does not play until that control is pressed.
+- **New board** deals another solvable route.
+- **Watch a finished line** plays one solution for a fresh board.
+- **Fit the opening** turns a piece so it can continue the line. You still click the cell to place it.
+- **Sound** starts a looping factory ambience. It does not play until that control is pressed. A finished line plays a short chime on the click that opens the valve.
 
-The loop is “Factory ambiance” by yd, dedicated to the public domain (CC0) on [OpenGameArt](https://opengameart.org/content/factory-ambiance). The file in `site/audio/` is a 96 kbps MP3 re-encode of that upload. Credit is in the page footer.
+The loop is “Factory ambiance” by yd, released into the public domain on [OpenGameArt](https://opengameart.org/content/factory-ambiance). The file in `site/audio/` is a 96 kbps MP3 re-encode of that upload. Credit is in the page footer.
 
 ```bash
 node test/rules.test.js
