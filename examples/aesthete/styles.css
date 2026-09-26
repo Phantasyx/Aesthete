@@ -271,11 +271,11 @@ button {
 .mode button,
 #watch,
 #reset {
-  border: 1px solid var(--line);
+  border: 1px solid var(--ink);
   border-radius: 999px;
-  background: transparent;
+  background: #fffdf8;
   color: var(--ink);
-  padding: 0.45rem 0.85rem;
+  padding: 0.5rem 0.9rem;
   cursor: pointer;
 }
 

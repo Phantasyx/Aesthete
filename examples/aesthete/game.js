@@ -37,6 +37,9 @@
   function describeOpenings(openings) {
     var open = DIRS.filter(function (dir) { return openings[dir]; })
       .map(function (dir) { return DIR_NAME[dir]; });
+    if (open.length === 0) {
+      return 'No open side.';
+    }
     if (open.length === 1) {
       return 'Opens ' + open[0] + '.';
     }
@@ -188,7 +191,7 @@
           return;
         }
         game.select(index);
-        render(describeOpenings(currentSeat(game.getState()).hand[index]) + ' Click a marked cell to place it, or rotate it first.');
+        render(describeOpenings(currentSeat(game.getState()).hand[index].openings) + ' Click a marked cell to place it, or rotate it first.');
       });
       handEl.appendChild(button);
     });
@@ -250,11 +253,10 @@
 
     var color = PALETTE[occupied ? occupied.owner : (owner == null ? 0 : owner)];
     if (occupied && occupied.kind === 'source') {
-      cell.innerHTML = svgSource(occupied.open, color) + '<span class="cell-label">Source</span>';
+      cell.innerHTML = svgSource(occupied.open, color);
       cell.setAttribute('aria-label', 'Source, opens east');
     } else if (occupied && occupied.kind === 'gauge') {
-      cell.innerHTML = svgGauge(occupied.charged, winnerColor && occupied.charged ? winnerColor : color) +
-        '<span class="cell-label">Gauge</span>';
+      cell.innerHTML = svgGauge(occupied.charged, winnerColor && occupied.charged ? winnerColor : color);
       cell.setAttribute('aria-label', occupied.charged ? 'Gauge, holding pressure' : 'Gauge');
     } else if (occupied && occupied.kind === 'inlet') {
       cell.innerHTML = svgInlet(color);
@@ -398,7 +400,7 @@
         var preview = local.getState();
         preview.players[0].selected = 0;
         preview.players[0].hand[0] = Aesthete.makePiece(step.type, step.rotation);
-        render('Piece ' + (i + 1) + ' of ' + steps.length + '. ' + describeOpenings(preview.players[0].hand[0]));
+        render('Piece ' + (i + 1) + ' of ' + steps.length + '. ' + describeOpenings(preview.players[0].hand[0].openings));
         await delay(700);
         if (token !== generation) {
           return;
