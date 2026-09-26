@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aesthete · PhantasyX example</title>
+  <meta name="description" content="Aesthete is a PhantasyX example: a two-seat pipe puzzle about sealing a connection from source to gauge. This page plays in the browser with no server.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23241f1b' width='32' height='32' rx='6'/%3E%3Cpath d='M6 16h20' stroke='%23e4b08a' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <a class="mark" href="https://phantasyx.com/">PhantasyX</a>
+    <p class="example-index">Example 03</p>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="kicker">Connectivity study</p>
+      <h1>Aesthete</h1>
+      <p class="lede">Two seats share one board. Each owns a source and a gauge. A pipe can be added only where your own line is still open, and only if the piece opens back into that leak. The line is finished when every opening meets another opening and the gauge is connected.</p>
+    </section>
+
+    <section class="stage" aria-label="Playable board">
+      <div class="board-column">
+        <p id="turn-label" class="turn-label">Your line to move</p>
+        <p id="status" class="status" role="status">The leak beside the source faces west. Fit a piece so it opens west, then click the marked cell.</p>
+        <div class="panel">
+          <div id="board" class="board" role="group" aria-label="Pipe board"></div>
+        </div>
+        <p class="legend">The gold mark is the side the next piece must open. Copper is the upper line. Teal is the lower line.</p>
+      </div>
+
+      <aside class="dock" aria-label="Turn controls">
+        <ol class="steps">
+          <li>Select a piece that opens toward the gold mark.</li>
+          <li>Click the marked cell. The leak moves to every new open end.</li>
+          <li>Open the valve only when the line is closed through to the gauge.</li>
+        </ol>
+
+        <div class="mode" role="group" aria-label="How many seats">
+          <button type="button" id="mode-solo" aria-pressed="true">One line</button>
+          <button type="button" id="mode-hotseat" aria-pressed="false">Two seats</button>
+        </div>
+
+        <h2>Pieces</h2>
+        <div id="hand" class="hand" role="group" aria-label="Available pieces"></div>
+        <p id="compass" class="compass"></p>
+        <div class="actions">
+          <button type="button" id="fit">Fit the leak</button>
+          <button type="button" id="rotate">Rotate</button>
+          <button type="button" id="discard">Discard</button>
+        </div>
+
+        <h2>Commit</h2>
+        <div class="actions">
+          <button type="button" id="valve" class="is-commit">Open valve</button>
+          <button type="button" id="concede">Concede</button>
+        </div>
+        <p class="hint">Opening the valve on a leak loses the seat. In a two-seat match, the other line takes it.</p>
+
+        <div class="actions demo-actions">
+          <button type="button" id="watch">Show a sealed line</button>
+          <button type="button" id="reset">Reset</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="notes">
+      <article>
+        <h2>What the connection is</h2>
+        <p>Each seat is trying to join two fixed ends: a source that opens east, and a gauge inlet that opens west. Pieces in between are caps, elbows, straights, and tees. A finished line has no bare end. Running a pipe off the board leaves an opening that can never be capped, so that route cannot win.</p>
+      </article>
+      <article>
+        <h2>Where the two seats meet</h2>
+        <p>The original online match stores the shared turn in MySQL. Each browser talks to a PHP application, and the waiting seat reloads every two seconds. The browsers never connect to each other. This page is the version that can live on a static host: one person plays a single line, or two people pass one device. The board never leaves the browser.</p>
+      </article>
+      <article>
+        <h2>On the marketing site</h2>
+        <p>Serve this folder at <span class="path">/examples/aesthete/</span>. It is four files, with relative links, and it does not need a build or a database. The PHP match server remains in the repository for anyone who wants the original shared-turn setup.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="colophon">
+    <p><a href="https://phantasyx.com/">PhantasyX</a> consultancy example. If a credit needs to distinguish this interactive study from the practice, call the study PhantasyX Studios and leave the practice named PhantasyX.</p>
+  </footer>
+
+  <script src="rules.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

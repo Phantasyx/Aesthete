@@ -45,8 +45,9 @@ SQL;
         return new User($row);
     }
     /*
-     * Add the temp user for guest to play the game
-     * @return $user with password "password" with username 'guest'.id
+     * Add a temporary guest player.
+     * The password is random and is not reused for a second login.
+     * @return User
      */
     public function tempUser(){
         $select_sql = <<<SQL
@@ -59,7 +60,7 @@ SQL;
         $id = $row['max(id)']+1;
         $salt = self::randomSalt();
         $name = "guest".strval($id);
-        $newpass = hash("sha256", "password" . $salt);
+        $newpass = hash("sha256", self::randomSalt(24) . $salt);
         $insert_sql=<<<SQL
 INSERT INTO $this->tableName(name,password,email,salt,guest)
 VALUES (?,?,?,?,?)
@@ -166,8 +167,7 @@ SQL;
         $validator = $validators->newValidator($id);
 
         // Send email with the validator in it
-        $link = "http://webdev.cse.msu.edu"  . $this->site->getRoot() .
-            '/password-validate.php?v=' . $validator;
+        $link = $this->site->url('/password-validate.php?v=' . rawurlencode($validator));
 
         $from = $this->site->getEmail();
         $name = $user->getName();
@@ -177,7 +177,7 @@ SQL;
 <html>
 <p>Greetings, $name,</p>
 
-<p>Welcome to Felis. In order to complete your registration,
+<p>Welcome to Aesthete. In order to complete your registration,
 please verify your email address by visiting the following link:</p>
 
 <p><a href="$link">$link</a></p>
@@ -197,12 +197,12 @@ MSG;
         $newpass = hash("sha256", $password . $salt);
         $sql=<<<SQL
 UPDATE $this->tableName
-SET `password`='$newpass',`salt`='$salt'
+SET `password`=?,`salt`=?
 WHERE id=?
 SQL;
         $pdo=$this->pdo();
         $statement = $pdo->prepare($sql);
-        $statement->execute(array($userid));
+        $statement->execute(array($newpass, $salt, $userid));
     }
     /**
      * Generate a random salt string of characters for password salting
@@ -235,8 +235,7 @@ SQL;
         $validator = $validators->newValidator($id);
 
         // Send email with the validator in it
-        $link = "http://webdev.cse.msu.edu"  . $this->site->getRoot() .
-            '/password-validate.php?v=' . $validator;
+        $link = $this->site->url('/password-validate.php?v=' . rawurlencode($validator));
 
         $from = $this->site->getEmail();
 
@@ -245,7 +244,7 @@ SQL;
 <html>
 <p>Greetings, $name,</p>
 
-<p>Welcome to Felis. In order to change your password, please visit the following link:</p>
+<p>A password reset was requested for your Aesthete account. Visit this link to choose a new password:</p>
 
 <p><a href="$link">$link</a></p>
 </html>
