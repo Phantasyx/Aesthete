@@ -61,6 +61,15 @@ Checked on 26 September 2026 against `node scripts/play.mjs` at `http://127.0.0.
 - The host scrapped one pipe. The host’s tray went to 17, the host’s turn label became “Waiting on Teal”, and Scrap pipe was disabled. The guest’s score read “0 · 0” and the note read “Copper has 0 laid and 17 left. Teal has 0 laid and 18 left. A perfect fill is 18 pipes on each side.” The guest’s turn label was “Teal to move”.
 - At 390px the document did not scroll sideways (`scrollWidth` 390) and the board still had 48 cells.
 
+## Product copy
+
+Checked on 26 September 2026 against `http://127.0.0.1:8094/`, after the public wording was rewritten.
+
+- The meta description, lede, and footer describe sealing a path from the source to the gauge. The notes section is titled “Two browsers” and explains the shared table.
+- Visible text does not include “An example”, “Why it is here”, “personal work”, “portfolio”, or “small PhantasyX example”.
+- The header still links the PhantasyX name to `https://phantasyx.com/`.
+- At 390px the document did not scroll sideways, and the board still had 48 cells.
+
 ## What this did not do
 
 This pass did not deploy to Cloudflare and did not open `https://throughline.phantasyx.com/`. The Worker and the Durable Object are in the repo. Attaching the hostname is still `npx wrangler deploy` from an account that owns the `phantasyx.com` zone, as written in `HOSTING.md`.

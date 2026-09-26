@@ -1,10 +1,10 @@
 # Throughline
 
-A small interactive example for [PhantasyX](https://phantasyx.com/), hosted at [throughline.phantasyx.com](https://throughline.phantasyx.com/).
+Seal a path from the source to the gauge. Hosted at [throughline.phantasyx.com](https://throughline.phantasyx.com/).
 
 Each seat owns a source and a gauge on one shared board. The tray starts as the exact set of pipes that fill that seat’s side. Laying a pipe raises the score. Scrapping a pipe removes it for good, so a shorter run can still seal and banks a lower score. Opening the valve while anything is still open does not bank the score. In a two-browser table, that failed valve gives the round to the other seat.
 
-Solo play stays in the page. Two browsers share one table through a small session service: the local play server, or a Cloudflare Durable Object in production. The waiting browser polls for the next turn. The pipe rules began as earlier personal work. An older PHP and MySQL version remains in [Phantasyx/Aesthete](https://github.com/Phantasyx/Aesthete). This page does not use it.
+Solo play stays in the page. Two browsers share one table through a small session service: the local play server, or a Cloudflare Durable Object in production. The waiting browser polls for the next turn. An older PHP and MySQL version remains in [Phantasyx/Aesthete](https://github.com/Phantasyx/Aesthete). This page does not use it.
 
 ## Build
 
