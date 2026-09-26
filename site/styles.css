@@ -35,10 +35,16 @@ a { color: inherit; }
 .top {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   max-width: 1120px;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 0;
+}
+
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
 }
 
 .mark {
@@ -55,6 +61,23 @@ a { color: inherit; }
   font-size: 0.82rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.sound {
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: #fffdf8;
+  color: var(--ink);
+  padding: 0.28rem 0.7rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.sound[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
 }
 
 main {

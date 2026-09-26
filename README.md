@@ -30,6 +30,9 @@ Open `http://127.0.0.1:8080/`.
 - **Two seats** is pass-and-play on one device.
 - **Show a sealed line** walks a finished route from source to gauge.
 - **Fit the leak** selects a piece that can continue the line. You still click the cell to place it.
+- **Sound** starts a looping factory ambience. It does not play until that control is pressed.
+
+The loop is “Factory ambiance” by yd, dedicated to the public domain (CC0) on [OpenGameArt](https://opengameart.org/content/factory-ambiance). The file in `site/audio/` is a 96 kbps MP3 re-encode of that upload. Credit is in the page footer.
 
 ```bash
 node test/rules.test.js

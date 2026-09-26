@@ -46,4 +46,4 @@ python3 -m http.server 8080 --directory dist
 
 ## If a subdomain cannot be added
 
-Use a path only when the zone cannot take `conduit.phantasyx.com` (the name is already claimed, or you cannot deploy a second Worker on the account). Copy the four files in `dist/` to the marketing Worker’s static root at `/examples/conduit/`. Links inside the page are relative, so that folder works without a build change. Do that instead of the subdomain, not in addition to pointing the subdomain at a path.
+Use a path only when the zone cannot take `conduit.phantasyx.com` (the name is already claimed, or you cannot deploy a second Worker on the account). Copy `dist/` to the marketing Worker’s static root at `/examples/conduit/`, including `audio/factory.mp3`. Links inside the page are relative, so that folder works without a build change. Do that instead of the subdomain, not in addition to pointing the subdomain at a path.
