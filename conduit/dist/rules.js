@@ -1,5 +1,6 @@
 /**
- * Aesthete board rules, shared by the static demo and the node tests.
+ * Conduit board rules, shared by the static demo and the node tests.
+ * The coordinates follow the 2017 Aesthete pipe study.
  *
  * Coordinates match the 2017 PHP game: x is the column, y is the row.
  * A size of 6 produces an 8 by 6 grid. Each seat has a source on the
@@ -11,7 +12,7 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = api;
   }
-  root.Aesthete = api;
+  root.Conduit = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   var DIRS = ['N', 'E', 'S', 'W'];
   var DELTA = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };

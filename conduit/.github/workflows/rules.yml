@@ -13,3 +13,5 @@ jobs:
         with:
           node-version: "22"
       - run: node test/rules.test.js
+      - run: node scripts/build.mjs
+      - run: git diff --exit-code -- dist

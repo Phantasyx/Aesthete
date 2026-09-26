@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aesthete · PhantasyX example</title>
-  <meta name="description" content="Aesthete is a PhantasyX example: a two-seat pipe puzzle about sealing a connection from source to gauge. This page plays in the browser with no server.">
+  <title>Conduit · PhantasyX</title>
+  <meta name="description" content="Conduit is a PhantasyX example: seal a line from a source to a gauge on a shared board. It is hosted at conduit.phantasyx.com and runs entirely in the browser.">
+  <link rel="canonical" href="https://conduit.phantasyx.com/">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23241f1b' width='32' height='32' rx='6'/%3E%3Cpath d='M6 16h20' stroke='%23e4b08a' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +21,7 @@
   <main>
     <section class="hero">
       <p class="kicker">Connectivity study</p>
-      <h1>Aesthete</h1>
+      <h1>Conduit</h1>
       <p class="lede">Two seats share one board. Each owns a source and a gauge. A pipe can be added only where your own line is still open, and only if the piece opens back into that leak. The line is finished when every opening meets another opening and the gauge is connected.</p>
     </section>
 
@@ -79,14 +80,14 @@
         <p>The 2017 study kept the shared turn in MySQL. Each browser talked to a PHP application, and the waiting seat reloaded every two seconds. The browsers never connected to each other. This page is the study rebuilt for a static host: one person plays a single line, or two people pass one device. The board never leaves the browser.</p>
       </article>
       <article>
-        <h2>On the marketing site</h2>
-        <p>Serve the <span class="path">public/</span> files at <span class="path">/examples/aesthete/</span>. Relative links, no build, no database. The original PHP match server stays in <a href="https://github.com/Phantasyx/Aesthete">Phantasyx/Aesthete</a>.</p>
+        <h2>Where it is hosted</h2>
+        <p>The host is <span class="path">conduit.phantasyx.com</span>. The files are static, and the board never leaves the browser. These pipe rules come from the earlier Aesthete study. That PHP match server stays in <a href="https://github.com/Phantasyx/Aesthete">Phantasyx/Aesthete</a>.</p>
       </article>
     </section>
   </main>
 
   <footer class="colophon">
-    <p><a href="https://phantasyx.com/">PhantasyX</a> consultancy example. If a credit needs to distinguish this interactive study from the practice, call the study PhantasyX Studios and leave the practice named PhantasyX.</p>
+    <p><a href="https://phantasyx.com/">PhantasyX</a>. Conduit is an interactive example on <a href="https://conduit.phantasyx.com/">conduit.phantasyx.com</a>. If a credit needs to distinguish the study from the practice, call the study PhantasyX Studios and leave the practice named PhantasyX.</p>
   </footer>
 
   <script src="rules.js"></script>

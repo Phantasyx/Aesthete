@@ -1,0 +1,14 @@
+{
+  "name": "conduit",
+  "compatibility_date": "2026-09-26",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./dist"
+  },
+  "routes": [
+    {
+      "pattern": "conduit.phantasyx.com",
+      "custom_domain": true
+    }
+  ]
+}
