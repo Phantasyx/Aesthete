@@ -25,7 +25,7 @@
     <section class="hero">
       <p class="kicker">Interaction</p>
       <h1>Throughline</h1>
-      <p class="lede">This is a small example of a system with one clear rule. You connect a source to a gauge. A piece can be added only where your own line is still open, and only if it faces that opening. The line is finished when every opening meets another opening and the gauge is on the line.</p>
+      <p class="lede">Two browsers can share one board. The pipes in your tray are exactly enough to fill your side, and every pipe you lay raises the score. Scrap a pipe and it is gone, so a short run to the gauge still seals, it just scores less. Filling the whole side is the best score, and one wrong opening can make that impossible.</p>
     </section>
 
     <section class="stage" aria-label="Playable board">
@@ -38,40 +38,50 @@
             <p class="celebrate-banner">The line is sealed.</p>
           </div>
         </div>
-        <p class="legend">The wheel on the left is the source. The dial on the right is the gauge. The gold mark shows the side the next piece has to open. Copper is the first line. Teal is the second line, when two people share the board.</p>
+        <p class="legend">The wheel on the left is the source. The dial on the right is the gauge. The gold mark is the only cell you can play. Copper is the first player. Teal is the second.</p>
       </div>
 
       <aside class="dock" aria-label="Turn controls">
-        <ol class="steps">
-          <li>Choose a piece that opens toward the gold mark.</li>
-          <li>Click the marked cell. The open end moves to whatever the new piece leaves uncovered.</li>
-          <li>Open the valve when the line runs all the way to the gauge and nothing is left open.</li>
-        </ol>
-
-        <div class="mode" role="group" aria-label="How many seats">
-          <button type="button" id="mode-solo" aria-pressed="true">One line</button>
-          <button type="button" id="mode-hotseat" aria-pressed="false">Two seats</button>
+        <div class="scoreboard">
+          <p class="score-kicker" id="score-kicker">Score</p>
+          <p id="score" class="score-value">0</p>
+          <p id="score-note" class="score-note">Lay pipes to raise it. A perfect fill uses every pipe in the tray.</p>
         </div>
 
-        <h2>Pieces</h2>
-        <div id="hand" class="hand" role="group" aria-label="Available pieces"></div>
-        <p id="compass" class="compass"></p>
-        <div class="actions">
-          <button type="button" id="fit">Fit the opening</button>
+        <div class="mode" role="group" aria-label="Who is playing">
+          <button type="button" id="mode-solo" aria-pressed="true">Solo</button>
+          <button type="button" id="mode-live" aria-pressed="false">Two browsers</button>
+        </div>
+
+        <div id="room" class="room" hidden>
+          <p id="room-status" class="room-status">Open a table, then send the code to the other player.</p>
+          <p id="room-code" class="room-code" hidden></p>
+          <div class="actions">
+            <button type="button" id="host">Open a table</button>
+          </div>
+          <form id="join-form" class="join-form">
+            <input id="join-code" maxlength="4" autocomplete="off" spellcheck="false" aria-label="Table code" placeholder="Code">
+            <button type="submit">Sit down</button>
+          </form>
+        </div>
+
+        <div class="actions play-actions">
           <button type="button" id="rotate">Rotate</button>
-          <button type="button" id="discard">Discard</button>
+          <button type="button" id="discard">Scrap pipe</button>
+          <button type="button" id="valve" class="is-commit">Seal the line</button>
         </div>
-
-        <h2>Finish</h2>
         <div class="actions">
-          <button type="button" id="valve" class="is-commit">Open the valve</button>
-          <button type="button" id="concede">Give up</button>
+          <button type="button" id="concede">Forfeit</button>
         </div>
-        <p class="hint">Opening the valve while something is still open loses the line. If two people are playing, the other person wins.</p>
+        <p id="compass" class="compass"></p>
+        <p class="hint">Rotate until the pipe opens toward the gold mark, then click that cell. Scrap throws the pipe away. Seal banks the score only when the gauge is connected.</p>
+
+        <h2>Your pipes</h2>
+        <div id="hand" class="hand" role="group" aria-label="Pipes left in the tray"></div>
 
         <div class="actions demo-actions">
-          <button type="button" id="watch">Watch a finished line</button>
-          <button type="button" id="reset">New board</button>
+          <button type="button" id="watch">Watch a perfect fill</button>
+          <button type="button" id="reset">New puzzle</button>
         </div>
       </aside>
     </section>
@@ -83,11 +93,11 @@
       </article>
       <article>
         <h2>Why it is here</h2>
-        <p>PhantasyX builds custom software. Throughline is here to show a small piece of interaction craft. The rule is visible, the next move is marked, and the board never leaves your browser. One person can play alone. Two people can pass the same device.</p>
+        <p>PhantasyX builds custom software. Throughline is a small example of a shared session: two browsers keep one board, one turn at a time, and the score is the same on both screens. Solo play stays on this page if you want to practice the puzzle alone.</p>
       </article>
       <article>
-        <h2>A new board each time</h2>
-        <p>New board deals a different route from the source to the gauge. Each route can be finished. Watch a finished line plays one solution, so you can see the rule close without having to find it yourself.</p>
+        <h2>The score</h2>
+        <p>The tray starts with every pipe the perfect fill needs. Lay more of them and the score climbs. Scrap one and the ceiling drops. A direct run to the gauge still seals. It just banks a smaller number. Chasing the full side is the risk, because a pipe that opens the wrong way can leave an end you can never close.</p>
       </article>
     </section>
   </main>

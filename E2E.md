@@ -49,6 +49,18 @@ Checked on 26 September 2026 against `dist/` at `http://127.0.0.1:8093/`, after 
 - At 390px the heading still fit, the document did not scroll sideways, and the board still had 48 cells.
 - In the desktop browser, New board moved the source and the gold mark, and Watch a finished line ended on the same banner.
 
+## Scored table
+
+Checked on 26 September 2026 against `node scripts/play.mjs` at `http://127.0.0.1:8094/`. `node test/rules.test.js` and `node test/session.test.js` passed. Clicks were real mouse events in headless Chrome.
+
+- Solo starts at score 0 with 18 pipes in the tray. The note reads “Perfect fill is 18 pipes. 18 still in the tray.”
+- Scrap pipe leaves 17 pipes. The note reads “Perfect fill is 18 pipes. 17 still in the tray. The best you can still reach is 17.” The status says that pipe is scrapped and the best score still reachable is 17.
+- Seal the line on that unfinished board does not celebrate. The score kicker reads “Not banked”, the score stays 0, and the status says the score does not bank. The click played 220 Hz, then 165 Hz.
+- The controls read Rotate, Scrap pipe, Seal the line, Forfeit, Watch a perfect fill, New puzzle, Solo, and Two browsers. There is no Fit control and no pass-and-play control.
+- Two browsers: the host opened table `M8J9` as Copper. The guest sat down as Teal. Both boards had seed `3721071773` and the same route.
+- The host scrapped one pipe. The host’s tray went to 17, the host’s turn label became “Waiting on Teal”, and Scrap pipe was disabled. The guest’s score read “0 · 0” and the note read “Copper has 0 laid and 17 left. Teal has 0 laid and 18 left. A perfect fill is 18 pipes on each side.” The guest’s turn label was “Teal to move”.
+- At 390px the document did not scroll sideways (`scrollWidth` 390) and the board still had 48 cells.
+
 ## What this did not do
 
-This pass did not deploy to Cloudflare and did not open `https://throughline.phantasyx.com/`. That name is attached by `npx wrangler deploy` from an account that owns the `phantasyx.com` zone, as written in `HOSTING.md`.
+This pass did not deploy to Cloudflare and did not open `https://throughline.phantasyx.com/`. The Worker and the Durable Object are in the repo. Attaching the hostname is still `npx wrangler deploy` from an account that owns the `phantasyx.com` zone, as written in `HOSTING.md`.
