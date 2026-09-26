@@ -13,5 +13,6 @@ jobs:
         with:
           node-version: "22"
       - run: node throughline/test/rules.test.js
+      - run: node throughline/test/session.test.js
       - run: node throughline/scripts/build.mjs
       - run: git diff --exit-code -- throughline/dist

@@ -248,16 +248,113 @@
     }
   }
 
+  function serpentine(x0, x1, y0, y1) {
+    var path = [];
+    var leftToRight = true;
+    for (var y = y0; y <= y1; y++) {
+      if (leftToRight) {
+        for (var x = x0; x <= x1; x++) path.push({ x: x, y: y });
+      } else {
+        for (var x = x1; x >= x0; x--) path.push({ x: x, y: y });
+      }
+      leftToRight = !leftToRight;
+    }
+    return path;
+  }
+
+  function hamPath(rng, x0, x1, y0, y1, start, goal) {
+    var total = (x1 - x0 + 1) * (y1 - y0 + 1);
+    var seen = {};
+    var path = [{ x: start.x, y: start.y }];
+    seen[key(start.x, start.y)] = true;
+    var visits = 0;
+
+    function onward(cell) {
+      var count = 0;
+      for (var i = 0; i < DIRS.length; i++) {
+        var nx = cell.x + DELTA[DIRS[i]][0];
+        var ny = cell.y + DELTA[DIRS[i]][1];
+        if (nx < x0 || nx > x1 || ny < y0 || ny > y1) continue;
+        if (seen[key(nx, ny)]) continue;
+        count += 1;
+      }
+      return count;
+    }
+
+    function options(cell) {
+      var list = [];
+      for (var i = 0; i < DIRS.length; i++) {
+        var nx = cell.x + DELTA[DIRS[i]][0];
+        var ny = cell.y + DELTA[DIRS[i]][1];
+        if (nx < x0 || nx > x1 || ny < y0 || ny > y1) continue;
+        if (seen[key(nx, ny)]) continue;
+        list.push({ x: nx, y: ny, rank: 0 });
+      }
+      for (var n = 0; n < list.length; n++) {
+        list[n].rank = onward(list[n]) + rng() * 0.3;
+      }
+      list.sort(function (a, b) { return a.rank - b.rank; });
+      return list;
+    }
+
+    function walk() {
+      visits += 1;
+      if (visits > 8000) return false;
+      if (path.length === total) {
+        var last = path[path.length - 1];
+        return last.x === goal.x && last.y === goal.y;
+      }
+      var list = options(path[path.length - 1]);
+      for (var i = 0; i < list.length; i++) {
+        var next = list[i];
+        if (path.length + 1 < total && next.x === goal.x && next.y === goal.y) {
+          continue;
+        }
+        path.push({ x: next.x, y: next.y });
+        seen[key(next.x, next.y)] = true;
+        if (walk()) return true;
+        path.pop();
+        delete seen[key(next.x, next.y)];
+      }
+      return false;
+    }
+
+    if (!walk()) return null;
+    return path;
+  }
+
+  function fillSeat(index, size, rng) {
+    var half = size / 2;
+    var y0 = index === 0 ? 0 : half;
+    var y1 = y0 + half - 1;
+    var source = { x: 0, y: y0 };
+    var gaugeBottom = { x: size + 1, y: y1 };
+    var gaugeTop = { x: size + 1, y: y1 - 1 };
+    var start = { x: 1, y: y0 };
+    var goal = { x: size, y: y1 };
+    var path = hamPath(rng, 1, size, y0, y1, start, goal);
+    if (!path) path = serpentine(1, size, y0, y1);
+    var steps = stepsFromPath(path, source, gaugeBottom);
+    if (!steps) {
+      path = serpentine(1, size, y0, y1);
+      steps = stepsFromPath(path, source, gaugeBottom);
+    }
+    if (!steps) return null;
+    return {
+      source: source,
+      gaugeTop: gaugeTop,
+      gaugeBottom: gaugeBottom,
+      steps: steps
+    };
+  }
+
   function randomLayouts(rng, size, seats) {
-    var blocked = {};
+    if (size % 2 !== 0) return null;
     var layouts = [];
     for (var i = 0; i < seats; i++) {
-      var layout = generateSeat(rng, size, blocked);
-      if (!layout) {
-        return null;
-      }
+      var layout = fillSeat(i, size, rng);
+      if (!layout) return null;
       layouts.push(layout);
-      occupyLayout(blocked, layout);
     }
     return layouts;
   }
@@ -284,10 +381,9 @@
   }
 
   function makeSeat(layout, rng) {
-    var hand = [];
-    for (var i = 0; i < 5; i++) {
-      hand.push(randomPiece(rng));
-    }
+    var hand = shuffle(rng, layout.steps.map(function (step) {
+      return makePiece(step.type, step.rotation);
+    }));
     return {
       source: { x: layout.source.x, y: layout.source.y },
       gaugeTop: { x: layout.gaugeTop.x, y: layout.gaugeTop.y },
@@ -295,6 +391,7 @@
       pipes: [],
       leaks: [{ x: layout.source.x + 1, y: layout.source.y, dir: 'W' }],
       hand: hand,
+      supply: layout.steps.length,
       selected: 0
     };
   }
@@ -426,12 +523,40 @@
       isSealed: function (index) {
         return isSealed(state.players[index], state.size);
       },
+      snapshot: function () {
+        return JSON.parse(JSON.stringify({
+          size: state.size,
+          seats: state.seats,
+          seed: state.seed,
+          solutions: state.solutions,
+          turn: state.turn,
+          players: state.players,
+          occupied: state.occupied,
+          over: state.over,
+          winner: state.winner,
+          result: state.result
+        }));
+      },
+      restore: function (snap) {
+        var next = JSON.parse(JSON.stringify(snap));
+        state.size = next.size;
+        state.seats = next.seats;
+        state.seed = next.seed;
+        state.solutions = next.solutions;
+        state.turn = next.turn;
+        state.players = next.players;
+        state.occupied = next.occupied;
+        state.over = next.over;
+        state.winner = next.winner;
+        state.result = next.result;
+      },
       select: function (index) {
         if (state.over || state.busy) {
           return;
         }
-        if (index >= 0 && index < 5) {
-          current().selected = index;
+        var seat = current();
+        if (index >= 0 && index < seat.hand.length) {
+          seat.selected = index;
         }
       },
       prepareFit: function () {
@@ -478,7 +603,9 @@
         if (state.over || state.busy) {
           return;
         }
-        var piece = current().hand[current().selected];
+        var seat = current();
+        var piece = seat.hand[seat.selected];
+        if (!piece) return;
         piece.openings = rotateOpenings(piece.openings);
         piece.rotation = (piece.rotation + 1) % 4;
       },
@@ -487,7 +614,13 @@
           return { ok: false, reason: 'closed' };
         }
         var seat = current();
-        seat.hand[seat.selected] = randomPiece(state.rng);
+        if (!seat.hand.length) {
+          return { ok: false, reason: 'empty' };
+        }
+        seat.hand.splice(seat.selected, 1);
+        if (seat.selected >= seat.hand.length) {
+          seat.selected = Math.max(0, seat.hand.length - 1);
+        }
         passTurn();
         return { ok: true, reason: 'discarded' };
       },
@@ -507,6 +640,9 @@
           return { ok: false, reason: 'not-leak' };
         }
         var piece = seat.hand[seat.selected];
+        if (!piece) {
+          return { ok: false, reason: 'empty' };
+        }
         if (!piece.openings[leak.dir]) {
           return { ok: false, reason: 'facing' };
         }
@@ -537,9 +673,12 @@
           state.occupied[key(nx, ny)] = true;
           seat.leaks.push({ x: nx, y: ny, dir: OPPOSITE[dir] });
         }
-        seat.hand[seat.selected] = randomPiece(state.rng);
+        seat.hand.splice(seat.selected, 1);
+        if (seat.selected >= seat.hand.length) {
+          seat.selected = Math.max(0, seat.hand.length - 1);
+        }
         passTurn();
-        return { ok: true, reason: 'placed' };
+        return { ok: true, reason: 'placed', score: seat.pipes.length };
       },
       openValve: function () {
         if (state.over || state.busy) {

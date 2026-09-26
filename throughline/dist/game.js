@@ -7,21 +7,29 @@
   var DIR_NAME = { N: 'north', E: 'east', S: 'south', W: 'west' };
   var TYPE_NAME = { cap: 'cap', elbow: 'elbow', straight: 'straight', tee: 'tee' };
   var PALETTE = ['#e4b08a', '#8fd0cb'];
-  var NAMES = ['Upper line', 'Lower line'];
+  var NAMES = ['Copper', 'Teal'];
 
   var boardEl = document.getElementById('board');
   var handEl = document.getElementById('hand');
   var statusEl = document.getElementById('status');
   var compassEl = document.getElementById('compass');
   var turnEl = document.getElementById('turn-label');
-  var fitButton = document.getElementById('fit');
+  var scoreEl = document.getElementById('score');
+  var scoreNoteEl = document.getElementById('score-note');
+  var scoreKickerEl = document.getElementById('score-kicker');
+  var roomEl = document.getElementById('room');
+  var roomStatusEl = document.getElementById('room-status');
+  var roomCodeEl = document.getElementById('room-code');
   var rotateButton = document.getElementById('rotate');
   var discardButton = document.getElementById('discard');
   var valveButton = document.getElementById('valve');
   var concedeButton = document.getElementById('concede');
+  var watchButton = document.getElementById('watch');
 
   var game = null;
-  var seats = 1;
+  var net = null;
+  var pollTimer = null;
+  var sending = false;
   var locked = false;
   var generation = 0;
   var lastPlaced = null;
@@ -128,12 +136,43 @@
     playChime();
   }
 
-  function currentSeat(state) {
-    return state.players[state.turn];
+  function mySeatIndex(state) {
+    return net ? net.seat : 0;
   }
 
-  function seatName(index) {
-    return seats === 1 ? 'Your line' : NAMES[index];
+  function myTurn(state) {
+    if (state.over) {
+      return false;
+    }
+    if (!net) {
+      return true;
+    }
+    return state.turn === net.seat;
+  }
+
+  function seatName(state, index) {
+    return state.seats === 1 ? 'You' : NAMES[index];
+  }
+
+  function shownScore(state, index) {
+    var seat = state.players[index];
+    if (state.result === 'leak' || state.result === 'concede') {
+      if (state.seats === 1 || state.winner !== index) {
+        return 0;
+      }
+    }
+    return seat.pipes.length;
+  }
+
+  function bestReachable(seat) {
+    return seat.pipes.length + seat.hand.length;
+  }
+
+  function actorIndex(state, reason) {
+    if (state.seats === 2 && (reason === 'placed' || reason === 'discarded')) {
+      return 1 - state.turn;
+    }
+    return mySeatIndex(state);
   }
 
   function describeOpenings(openings) {
@@ -153,65 +192,137 @@
 
   function startMessage() {
     var state = game.getState();
-    var leak = currentSeat(state).leaks[0];
-    var side = DIR_NAME[leak.dir];
-    if (state.seats === 2) {
-      return 'Two people share this board. The upper line moves first, and the open end needs a piece that faces ' + side + '. Pass the device when the turn changes. Nothing is sent to a server.';
+    var seat = state.players[mySeatIndex(state)];
+    var leak = seat.leaks[0];
+    var side = leak ? DIR_NAME[leak.dir] : 'the line';
+    if (net && net.seatsFilled < 2) {
+      return 'The table is open. Send the code. Copper moves first, and the board matches when the other browser sits down.';
     }
-    return 'The open end beside the source needs a piece that opens ' + side + '. Turn a piece until it faces that way, then click the gold mark.';
+    if (net && !myTurn(state)) {
+      return 'The other browser has the turn. Your pipes stay in the tray until it comes back.';
+    }
+    if (state.seats === 2) {
+      return seatName(state, state.turn) + ' moves. The gold mark needs a pipe that opens ' + side + '. Every pipe you lay raises the score.';
+    }
+    return 'The tray holds every pipe for a perfect fill. The gold mark needs a pipe that opens ' + side + '. Lay more pipes to raise the score, or scrap one and take a shorter run.';
   }
 
   function messageFor(reason, state) {
+    var actor = state.players[actorIndex(state, reason)] || state.players[0];
     if (reason === 'facing') {
-      return 'That piece does not open toward the gold mark. Rotate it, or choose a different piece.';
+      return 'That pipe does not open toward the gold mark. Rotate it, or choose another pipe.';
     }
     if (reason === 'not-leak') {
-      return 'You can only place a piece on the gold mark, on the line that is moving.';
+      return 'You can only lay a pipe on the gold mark.';
     }
     if (reason === 'other-leak') {
       return 'That opening belongs to the other line. On this turn you can only extend the line that is moving.';
     }
+    if (reason === 'empty') {
+      return 'The tray is empty. Seal the line with what you have laid, or forfeit.';
+    }
     if (reason === 'placed') {
+      var placedScore = actor.pipes.length;
+      var placedBest = bestReachable(actor);
+      var placed = 'Score is ' + placedScore + '. The best you can still reach is ' + placedBest + '.';
       if (state.seats === 2) {
-        return seatName(state.turn) + ' moves next. Place a piece only on the gold marks for that line.';
+        return seatName(state, state.turn) + ' has the turn. ' + placed;
       }
       var leaks = state.players[0].leaks.length;
       if (leaks === 0) {
-        return 'Nothing is left open on the board. If the gauge is connected, open the valve. If a pipe runs off the edge, the line is not finished.';
+        return 'Nothing is left open on the board. ' + placed + ' If the gauge is connected, seal the line.';
       }
-      return 'The open end moved. ' + leaks + (leaks === 1 ? ' gold mark shows' : ' gold marks show') + ' where you can play next.';
+      return 'The open end moved. ' + placed;
     }
     if (reason === 'discarded') {
+      var left = actor.hand.length;
+      var best = bestReachable(actor);
+      var scrap = 'That pipe is scrapped. You have ' + left + ' left, so the best score you can still reach is ' + best + '.';
       if (state.seats === 2) {
-        return 'That piece is gone, and a new one took its place. ' + seatName(state.turn) + ' moves next.';
+        return scrap + ' ' + seatName(state, state.turn) + ' has the turn.';
       }
-      return 'That piece is gone, and a new one took its place. The line itself did not change.';
+      return scrap;
     }
-    if (reason === 'fitted') {
-      return 'This piece now opens toward the gold mark. Click the marked cell to place it.';
-    }
-    if (reason === 'none') {
-      return 'None of these pieces can meet that opening. Discard one and you will draw another.';
+    if (reason === 'rotated' || reason === 'selected') {
+      var piece = actor.hand[actor.selected];
+      if (!piece) {
+        return 'The tray is empty.';
+      }
+      return describeOpenings(piece.openings) + ' Lay it on the gold mark, or rotate it again.';
     }
     if (reason === 'sealed') {
-      if (state.seats === 2) {
-        return seatName(state.winner) + ' finished the line. Every opening meets another opening, and the gauge is connected.';
+      var winnerIndex = state.winner == null ? 0 : state.winner;
+      var winner = state.players[winnerIndex];
+      var sealed;
+      if (winner.pipes.length === winner.supply) {
+        sealed = 'Perfect fill. You used every pipe, and the gauge is connected.';
+      } else {
+        sealed = 'You sealed the line with ' + winner.pipes.length + ' pipes. A perfect fill on this board is ' + winner.supply + '.';
       }
-      return 'The line is sealed. Every opening meets another opening, and the gauge is connected.';
+      if (state.seats === 2) {
+        return seatName(state, winnerIndex) + ' banks ' + winner.pipes.length + '. ' + sealed;
+      }
+      return sealed;
     }
     if (reason === 'leak') {
       if (state.seats === 2) {
-        return seatName(state.winner) + ' wins. The valve was opened before the line was sealed.';
+        return seatName(state, state.winner) + ' takes the round. The valve opened before the line was sealed, so that score does not bank.';
       }
-      return 'The valve opened while the line was still unfinished. Any bare opening, including one that leaves the board, means the line is lost.';
+      return 'The valve opened while the line was still unfinished. The score does not bank.';
     }
     if (reason === 'concede') {
       if (state.seats === 2) {
-        return seatName(state.winner) + ' wins. The other person gave up the line.';
+        return seatName(state, state.winner) + ' takes the round. The other player forfeited.';
       }
-      return 'You gave up this line. Start a new board when you want another route.';
+      return 'You forfeited this puzzle. The score does not bank. Deal a new puzzle when you want another route.';
+    }
+    if (reason === 'wait') {
+      return 'The other browser has the turn.';
+    }
+    if (reason === 'host') {
+      return 'Only the host can deal the next puzzle.';
+    }
+    if (reason === 'waiting') {
+      return startMessage();
+    }
+    if (reason === 'sync') {
+      return startMessage();
+    }
+    if (reason === 'new') {
+      return startMessage();
     }
     return startMessage();
+  }
+
+  function paintScore(state) {
+    var mine = state.players[mySeatIndex(state)];
+    if (state.seats === 1) {
+      scoreKickerEl.textContent = state.result === 'leak' || state.result === 'concede' ? 'Not banked' : 'Score';
+      scoreEl.textContent = String(shownScore(state, 0));
+      if (state.result === 'sealed' && mine.pipes.length === mine.supply) {
+        scoreNoteEl.textContent = 'Perfect fill. You used every pipe, and the gauge is connected.';
+      } else if (state.result === 'sealed') {
+        scoreNoteEl.textContent = 'You sealed the line with ' + mine.pipes.length + ' pipes. A perfect fill on this board is ' + mine.supply + '.';
+      } else if (state.result === 'leak' || state.result === 'concede') {
+        scoreNoteEl.textContent = 'You laid ' + mine.pipes.length + ' pipes. The score does not bank.';
+      } else if (bestReachable(mine) < mine.supply) {
+        scoreNoteEl.textContent = 'Perfect fill is ' + mine.supply + ' pipes. ' + mine.hand.length + ' still in the tray. The best you can still reach is ' + bestReachable(mine) + '.';
+      } else {
+        scoreNoteEl.textContent = 'Perfect fill is ' + mine.supply + ' pipes. ' + mine.hand.length + ' still in the tray.';
+      }
+      return;
+    }
+    scoreKickerEl.textContent = 'Copper · Teal';
+    scoreEl.textContent = shownScore(state, 0) + ' · ' + shownScore(state, 1);
+    if (state.result === 'sealed') {
+      var winnerIndex = state.winner == null ? 0 : state.winner;
+      var winner = state.players[winnerIndex];
+      scoreNoteEl.textContent = seatName(state, winnerIndex) + ' sealed with ' + winner.pipes.length + ' pipes. A perfect fill is ' + winner.supply + '.';
+    } else if (state.result === 'leak' || state.result === 'concede') {
+      scoreNoteEl.textContent = 'The round is over. A score banks only when that line is sealed.';
+    } else {
+      scoreNoteEl.textContent = 'Copper has ' + state.players[0].pipes.length + ' laid. Teal has ' + state.players[1].pipes.length + ' laid. A perfect fill is ' + state.players[0].supply + ' pipes on each side.';
+    }
   }
 
   function svgPipe(openings, color, flowing) {
@@ -270,12 +381,17 @@
 
   function render(text) {
     var state = game.getState();
-    var seat = currentSeat(state);
+    var tray = state.players[mySeatIndex(state)];
     var winnerColor = state.winner == null ? null : PALETTE[state.winner];
     statusEl.textContent = text;
-    turnEl.textContent = state.over
-      ? (state.result === 'sealed' ? 'Line sealed' : 'Line still open')
-      : seatName(state.turn) + ' to move';
+    if (state.over) {
+      turnEl.textContent = state.result === 'sealed' ? 'Line sealed' : 'Round over';
+    } else if (net && !myTurn(state)) {
+      turnEl.textContent = 'Waiting on ' + seatName(state, state.turn);
+    } else {
+      turnEl.textContent = seatName(state, state.turn) + ' to move';
+    }
+    paintScore(state);
     boardEl.dataset.seed = String(state.seed);
     boardEl.dataset.route = (state.solutions[0] || []).map(function (step) {
       return step.x + ',' + step.y;
@@ -299,34 +415,36 @@
     }
 
     handEl.innerHTML = '';
-    seat.hand.forEach(function (piece, index) {
+    tray.hand.forEach(function (piece, index) {
       var button = document.createElement('button');
       button.type = 'button';
-      button.className = 'piece' + (index === seat.selected ? ' is-selected' : '');
-      button.setAttribute('aria-pressed', index === seat.selected ? 'true' : 'false');
+      button.className = 'piece' + (index === tray.selected ? ' is-selected' : '');
+      button.setAttribute('aria-pressed', index === tray.selected ? 'true' : 'false');
       button.setAttribute('aria-label', TYPE_NAME[piece.type] + ', ' + describeOpenings(piece.openings));
-      button.innerHTML = svgPipe(piece.openings, PALETTE[state.turn], false);
+      button.innerHTML = svgPipe(piece.openings, PALETTE[mySeatIndex(state)], false);
       button.addEventListener('click', function () {
-        if (locked || state.over) {
+        if (!myTurn(game.getState()) || locked || sending) {
           return;
         }
         game.select(index);
-        render(describeOpenings(currentSeat(game.getState()).hand[index].openings) + ' Click a marked cell to place it, or rotate it first.');
+        render(messageFor('selected', game.getState()));
       });
       handEl.appendChild(button);
     });
 
-    var selected = seat.hand[seat.selected];
+    var selected = tray.hand[tray.selected];
     compassEl.textContent = state.over
-      ? 'The hand is closed for this board.'
-      : describeOpenings(selected.openings);
+      ? 'The tray is closed for this puzzle.'
+      : (selected ? describeOpenings(selected.openings) : 'The tray is empty.');
 
-    var frozen = locked || state.over;
-    fitButton.disabled = frozen;
-    rotateButton.disabled = frozen;
-    discardButton.disabled = frozen;
+    var frozen = locked || sending || state.over || !myTurn(state);
+    rotateButton.disabled = frozen || tray.hand.length === 0;
+    discardButton.disabled = frozen || tray.hand.length === 0;
     valveButton.disabled = frozen;
     concedeButton.disabled = frozen;
+    if (watchButton) {
+      watchButton.disabled = !!net || locked;
+    }
   }
 
   function renderCell(state, x, y, winnerColor) {
@@ -389,7 +507,7 @@
       cell.setAttribute('aria-label', TYPE_NAME[occupied.pipe.type] + ' pipe, ' + describeOpenings(occupied.pipe.openings));
     } else if (leak) {
       var side = DIR_NAME[leak.dir];
-      cell.setAttribute('aria-label', 'Leak, piece must open ' + side);
+      cell.setAttribute('aria-label', 'Open end, pipe must open ' + side);
     } else {
       cell.setAttribute('aria-label', 'Empty cell');
     }
@@ -402,88 +520,277 @@
     return cell;
   }
 
-  function onCell(x, y) {
-    if (locked) {
+  function runLocal(body) {
+    if (body.type === 'select') {
+      game.select(body.index);
+      return { ok: true, reason: 'selected' };
+    }
+    if (body.type === 'rotate') {
+      game.rotate();
+      return { ok: true, reason: 'rotated' };
+    }
+    if (body.type === 'discard') return game.discard();
+    if (body.type === 'place') return game.place(body.x, body.y);
+    if (body.type === 'valve') return game.openValve();
+    if (body.type === 'concede') return game.concede();
+    return { ok: false, reason: 'unknown' };
+  }
+
+  function applyRemote(payload) {
+    if (!payload || !payload.state || !net) {
+      return payload || { ok: false, reason: 'missing' };
+    }
+    if (payload.version != null && payload.version < net.version) {
+      return payload;
+    }
+    var wasOver = game.getState().over;
+    if (payload.version != null) net.version = payload.version;
+    if (payload.seatsFilled != null) net.seatsFilled = payload.seatsFilled;
+    game.restore(payload.state);
+    if (!payload.state.over && wasOver) {
+      lastPlaced = null;
+      clearCelebration();
+    }
+    return payload;
+  }
+
+  function act(body) {
+    var state = game.getState();
+    if (locked || sending) {
       return;
     }
+    if (body.type !== 'new' && (state.over || !myTurn(state))) {
+      render(messageFor(state.over ? state.result : 'wait', state));
+      return;
+    }
+    if (body.type === 'rotate' || body.type === 'discard' || body.type === 'place') {
+      body.index = state.players[state.turn].selected;
+    }
+    if (!net) {
+      var local = runLocal(body);
+      if (body.type === 'place' && local.reason === 'placed') {
+        lastPlaced = { x: body.x, y: body.y };
+      }
+      if (body.type === 'discard') {
+        lastPlaced = null;
+      }
+      render(messageFor(local.reason, game.getState()));
+      return;
+    }
+    sending = true;
+    render(statusEl.textContent);
+    fetch('/api/room/' + net.code + '/act', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(Object.assign({ token: net.token }, body))
+    }).then(function (res) {
+      return res.json();
+    }).then(function (payload) {
+      sending = false;
+      if (body.type === 'place' && payload.reason === 'placed') {
+        lastPlaced = { x: body.x, y: body.y };
+      }
+      if (body.type === 'discard' || body.type === 'new') {
+        lastPlaced = null;
+      }
+      if (body.type === 'new') {
+        clearCelebration();
+      }
+      applyRemote(payload);
+      render(messageFor(payload.reason, game.getState()));
+    }).catch(function () {
+      sending = false;
+      render('The session service is not answering. Solo play still works on this page.');
+    });
+  }
+
+  function onCell(x, y) {
     var state = game.getState();
-    if (state.over) {
+    if (locked || sending || state.over || !myTurn(state)) {
       return;
     }
     if (otherLeak(state, x, y)) {
       render(messageFor('other-leak', state));
       return;
     }
-    var result = game.place(x, y);
-    if (result.reason === 'placed') {
-      lastPlaced = { x: x, y: y };
-    }
-    render(messageFor(result.reason, game.getState()));
+    act({ type: 'place', x: x, y: y });
   }
 
-  function boot() {
+  function stopPoll() {
+    if (pollTimer) {
+      window.clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  function pollOnce() {
+    if (!net || sending) {
+      return;
+    }
+    fetch('/api/room/' + net.code, { cache: 'no-store' }).then(function (res) {
+      return res.json();
+    }).then(function (payload) {
+      if (!net || sending) {
+        return;
+      }
+      if (!payload.ok) {
+        render('That table is gone. Solo play still works on this page.');
+        return;
+      }
+      var version = payload.version;
+      var filled = payload.seatsFilled;
+      if (version === net.version && filled === net.seatsFilled) {
+        return;
+      }
+      var arrived = filled > net.seatsFilled;
+      applyRemote(payload);
+      render(messageFor(arrived ? 'waiting' : 'sync', game.getState()));
+    }).catch(function () {
+      if (!net) {
+        return;
+      }
+      roomStatusEl.textContent = 'The session service is not answering. Solo play still works on this page.';
+    });
+  }
+
+  function startPoll() {
+    stopPoll();
+    pollTimer = window.setInterval(pollOnce, 800);
+  }
+
+  function showRoom(code, status) {
+    roomEl.hidden = false;
+    roomStatusEl.textContent = status;
+    if (code) {
+      roomCodeEl.hidden = false;
+      roomCodeEl.textContent = code;
+    }
+    document.getElementById('mode-solo').setAttribute('aria-pressed', 'false');
+    document.getElementById('mode-live').setAttribute('aria-pressed', 'true');
+  }
+
+  function adopt(payload, status) {
+    net = {
+      code: payload.code,
+      token: payload.token,
+      seat: payload.seat,
+      version: payload.version,
+      seatsFilled: payload.seat === 1 ? 2 : 1
+    };
     generation += 1;
     locked = false;
     lastPlaced = null;
     clearCelebration();
-    game = Throughline.createGame({ seats: seats, seed: nextSeed() });
+    game = Throughline.createGame({ seats: 2, seed: payload.state.seed });
+    game.restore(payload.state);
+    showRoom(payload.code, status);
     render(startMessage());
-    document.getElementById('mode-solo').setAttribute('aria-pressed', seats === 1 ? 'true' : 'false');
-    document.getElementById('mode-hotseat').setAttribute('aria-pressed', seats === 2 ? 'true' : 'false');
+    startPoll();
+  }
+
+  function bootSolo() {
+    generation += 1;
+    locked = false;
+    sending = false;
+    lastPlaced = null;
+    net = null;
+    stopPoll();
+    roomEl.hidden = true;
+    roomCodeEl.hidden = true;
+    clearCelebration();
+    game = Throughline.createGame({ seats: 1, seed: nextSeed() });
+    document.getElementById('mode-solo').setAttribute('aria-pressed', 'true');
+    document.getElementById('mode-live').setAttribute('aria-pressed', 'false');
+    render(startMessage());
   }
 
   document.getElementById('mode-solo').addEventListener('click', function () {
-    seats = 1;
-    boot();
+    unlockAudio();
+    bootSolo();
   });
-  document.getElementById('mode-hotseat').addEventListener('click', function () {
-    seats = 2;
-    boot();
+  document.getElementById('mode-live').addEventListener('click', function () {
+    unlockAudio();
+    roomEl.hidden = false;
+    document.getElementById('mode-solo').setAttribute('aria-pressed', 'false');
+    document.getElementById('mode-live').setAttribute('aria-pressed', 'true');
+    if (!net) {
+      roomStatusEl.textContent = 'Open a table, then send the code to the other player. Solo stays on this page until someone sits down.';
+      roomCodeEl.hidden = true;
+    }
+  });
+  document.getElementById('host').addEventListener('click', function () {
+    unlockAudio();
+    roomStatusEl.textContent = 'Opening a table.';
+    fetch('/api/room', { method: 'POST' }).then(function (res) {
+      return res.json();
+    }).then(function (payload) {
+      if (!payload || !payload.code) {
+        roomStatusEl.textContent = 'The session service is not answering. Solo play still works on this page.';
+        return;
+      }
+      adopt(payload, 'You are Copper. Send this code to the other browser.');
+    }).catch(function () {
+      roomStatusEl.textContent = 'The session service is not answering. Solo play still works on this page.';
+    });
+  });
+  document.getElementById('join-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    unlockAudio();
+    var code = document.getElementById('join-code').value.replace(/[^a-z0-9]/gi, '').toUpperCase();
+    if (code.length !== 4) {
+      roomStatusEl.textContent = 'Enter the four character code from the other browser.';
+      return;
+    }
+    fetch('/api/room/' + code + '/join', { method: 'POST' }).then(function (res) {
+      return res.json();
+    }).then(function (payload) {
+      if (!payload || !payload.ok) {
+        var reason = payload && payload.reason;
+        if (reason === 'full') {
+          roomStatusEl.textContent = 'That table already has two players.';
+        } else if (reason === 'missing') {
+          roomStatusEl.textContent = 'That code does not match an open table.';
+        } else {
+          roomStatusEl.textContent = 'The session service is not answering. Solo play still works on this page.';
+        }
+        return;
+      }
+      adopt(payload, 'You are Teal. Copper has the first turn.');
+    }).catch(function () {
+      roomStatusEl.textContent = 'The session service is not answering. Solo play still works on this page.';
+    });
   });
   document.getElementById('reset').addEventListener('click', function () {
     unlockAudio();
-    boot();
-  });
-  fitButton.addEventListener('click', function () {
-    if (locked) {
+    if (net) {
+      if (net.seat !== 0) {
+        render('Only the host can deal the next puzzle.');
+        return;
+      }
+      act({ type: 'new' });
       return;
     }
-    var result = game.prepareFit();
-    render(messageFor(result.reason, game.getState()));
+    bootSolo();
   });
   rotateButton.addEventListener('click', function () {
-    if (locked || game.getState().over) {
-      return;
-    }
-    game.rotate();
-    var piece = currentSeat(game.getState()).hand[currentSeat(game.getState()).selected];
-    render(describeOpenings(piece.openings) + ' Place it on the gold mark, or rotate it again.');
+    act({ type: 'rotate' });
   });
   discardButton.addEventListener('click', function () {
-    if (locked) {
-      return;
-    }
-    var result = game.discard();
-    lastPlaced = null;
-    render(messageFor(result.reason, game.getState()));
+    act({ type: 'discard' });
   });
   valveButton.addEventListener('click', function () {
-    if (locked) {
-      return;
-    }
     unlockAudio().then(function () {
-      var result = game.openValve();
-      render(messageFor(result.reason, game.getState()));
+      act({ type: 'valve' });
     });
   });
   concedeButton.addEventListener('click', function () {
-    if (locked) {
+    act({ type: 'concede' });
+  });
+  watchButton.addEventListener('click', function () {
+    if (net) {
+      render('This table is live. Scrap, place, and seal here. Watch a perfect fill is for solo practice.');
       return;
     }
-    var result = game.concede();
-    render(messageFor(result.reason, game.getState()));
-  });
-  document.getElementById('watch').addEventListener('click', function () {
     unlockAudio().then(function () {
       playSealedLine();
     });
@@ -522,14 +829,13 @@
   function playSealedLine() {
     generation += 1;
     var token = generation;
-    seats = 1;
     locked = true;
     lastPlaced = null;
     clearCelebration();
     game = Throughline.createGame({ seats: 1, seed: nextSeed() });
     var local = game;
     document.getElementById('mode-solo').setAttribute('aria-pressed', 'true');
-    document.getElementById('mode-hotseat').setAttribute('aria-pressed', 'false');
+    document.getElementById('mode-live').setAttribute('aria-pressed', 'false');
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var steps = local.getState().solutions[0];
 
@@ -543,7 +849,7 @@
       return;
     }
 
-    render('Here is one way to finish this board, from the source to the gauge.');
+    render('Here is one perfect fill, from the source to the gauge.');
     (async function () {
       for (var i = 0; i < steps.length; i++) {
         if (token !== generation) {
@@ -553,15 +859,15 @@
         var preview = local.getState();
         preview.players[0].selected = 0;
         preview.players[0].hand[0] = Throughline.makePiece(step.type, step.rotation);
-        render('Piece ' + (i + 1) + ' of ' + steps.length + '. ' + describeOpenings(preview.players[0].hand[0].openings));
-        await delay(700);
+        render('Pipe ' + (i + 1) + ' of ' + steps.length + '. ' + describeOpenings(preview.players[0].hand[0].openings));
+        await delay(380);
         if (token !== generation) {
           return;
         }
         local.scriptedPlace(step);
         lastPlaced = { x: step.x, y: step.y };
-        render('The line follows the open end.');
-        await delay(420);
+        render('Score is ' + local.getState().players[0].pipes.length + '. The line follows the open end.');
+        await delay(220);
       }
       if (token !== generation) {
         return;
@@ -576,5 +882,5 @@
   if (bed) {
     bed.volume = 0.35;
   }
-  boot();
+  bootSolo();
 })();

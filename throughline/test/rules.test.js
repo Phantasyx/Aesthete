@@ -98,8 +98,9 @@ test('two seats alternate, and a bad valve gives the other seat the match', func
 test('fit prefers a piece that can continue past the leak', function () {
   var game = Throughline.createGame({ seats: 1, seed: 7, layout: 'classic' });
   var state = game.getState();
+  state.players[0].hand = [];
   for (var i = 0; i < 5; i++) {
-    state.players[0].hand[i] = Throughline.makePiece('cap', 0);
+    state.players[0].hand.push(Throughline.makePiece('cap', 0));
   }
   state.players[0].hand[3] = Throughline.makePiece('straight', 1);
   state.players[0].selected = 0;
@@ -116,8 +117,9 @@ test('fit prefers a piece that can continue past the leak', function () {
 test('fit still uses a cap when nothing else can meet the leak', function () {
   var game = Throughline.createGame({ seats: 1, seed: 8, layout: 'classic' });
   var state = game.getState();
+  state.players[0].hand = [];
   for (var i = 0; i < 5; i++) {
-    state.players[0].hand[i] = Throughline.makePiece('cap', 0);
+    state.players[0].hand.push(Throughline.makePiece('cap', 0));
   }
   var fitted = game.prepareFit();
   assert.strictEqual(fitted.index, 0);
@@ -125,12 +127,15 @@ test('fit still uses a cap when nothing else can meet the leak', function () {
   assert.strictEqual(state.players[0].hand[0].openings.S, false);
 });
 
-test('discard replaces the selected piece and passes a two-seat turn', function () {
+test('scrap removes the pipe and passes a two-seat turn', function () {
   var game = Throughline.createGame({ seats: 2, seed: 6 });
   var state = game.getState();
+  var before = state.players[0].hand.length;
+  var supply = state.players[0].supply;
   game.discard();
   assert.strictEqual(state.players[0].pipes.length, 0);
-  assert.strictEqual(state.players[0].hand.length, 5);
+  assert.strictEqual(state.players[0].hand.length, before - 1);
+  assert.strictEqual(before, supply);
   assert.strictEqual(state.turn, 1);
 });
 
@@ -143,7 +148,13 @@ test('a generated board can be sealed, and two seeds are not the same route', fu
       return step.x + ',' + step.y;
     }).join('|');
     seen[signature] = true;
-    assert.ok(state.solutions[0].length >= 4);
+    assert.strictEqual(state.solutions[0].length, 18);
+    assert.strictEqual(state.players[0].hand.length, 18);
+    var covered = {};
+    state.solutions[0].forEach(function (step) {
+      covered[step.x + ',' + step.y] = true;
+    });
+    assert.strictEqual(Object.keys(covered).length, 18);
     var results = game.replay(0);
     results.forEach(function (result, index) {
       assert.strictEqual(result.reason, 'placed', signature + ' step ' + index);
@@ -173,6 +184,38 @@ test('two generated lines do not share a cell, and each line can be sealed', fun
     assert.strictEqual(result.reason, 'placed');
   });
   assert.strictEqual(game.isSealed(1), true);
+});
+
+test('a short run seals for less than a perfect fill', function () {
+  var game = Throughline.createGame({ seats: 1, seed: 9 });
+  var state = game.getState();
+  var perfect = state.solutions[0].length;
+  var steps = [
+    { x: 1, y: 0, type: 'straight', rotation: 0 },
+    { x: 2, y: 0, type: 'straight', rotation: 0 },
+    { x: 3, y: 0, type: 'straight', rotation: 0 },
+    { x: 4, y: 0, type: 'straight', rotation: 0 },
+    { x: 5, y: 0, type: 'straight', rotation: 0 },
+    { x: 6, y: 0, type: 'elbow', rotation: 0 },
+    { x: 6, y: 1, type: 'straight', rotation: 1 },
+    { x: 6, y: 2, type: 'elbow', rotation: 2 }
+  ];
+  steps.forEach(function (step) {
+    assert.strictEqual(game.scriptedPlace(step).reason, 'placed', JSON.stringify(step));
+  });
+  assert.strictEqual(game.isSealed(0), true);
+  assert.strictEqual(state.players[0].pipes.length, steps.length);
+  assert.ok(steps.length < perfect);
+  assert.strictEqual(game.openValve().reason, 'sealed');
+});
+
+test('scrapping lowers the best score you can still reach', function () {
+  var game = Throughline.createGame({ seats: 1, seed: 4 });
+  var state = game.getState();
+  var perfect = state.solutions[0].length;
+  game.discard();
+  var reachable = state.players[0].pipes.length + state.players[0].hand.length;
+  assert.strictEqual(reachable, perfect - 1);
 });
 
 if (failures > 0) {
