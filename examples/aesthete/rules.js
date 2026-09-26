@@ -250,18 +250,36 @@
           return { ok: false, reason: 'no-leak' };
         }
         var dir = seat.leaks[0].dir;
+        var best = null;
         for (var i = 0; i < seat.hand.length; i++) {
           var piece = seat.hand[i];
+          var openings = cloneOpenings(piece.openings);
           for (var r = 0; r < 4; r++) {
-            if (piece.openings[dir]) {
-              seat.selected = i;
-              return { ok: true, reason: 'fitted', index: i, dir: dir };
+            if (openings[dir]) {
+              var extra = 0;
+              for (var d = 0; d < DIRS.length; d++) {
+                if (DIRS[d] !== dir && openings[DIRS[d]]) {
+                  extra += 1;
+                }
+              }
+              if (!best || extra > best.extra) {
+                best = { index: i, turns: r, extra: extra };
+              }
+              break;
             }
-            piece.openings = rotateOpenings(piece.openings);
-            piece.rotation = (piece.rotation + 1) % 4;
+            openings = rotateOpenings(openings);
           }
         }
-        return { ok: false, reason: 'none' };
+        if (!best) {
+          return { ok: false, reason: 'none' };
+        }
+        var chosen = seat.hand[best.index];
+        for (var turn = 0; turn < best.turns; turn++) {
+          chosen.openings = rotateOpenings(chosen.openings);
+          chosen.rotation = (chosen.rotation + 1) % 4;
+        }
+        seat.selected = best.index;
+        return { ok: true, reason: 'fitted', index: best.index, dir: dir };
       },
       rotate: function () {
         if (state.over || state.busy) {

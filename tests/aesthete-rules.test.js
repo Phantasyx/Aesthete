@@ -95,17 +95,34 @@ test('two seats alternate, and a bad valve gives the other seat the match', func
   assert.strictEqual(state.winner, 1);
 });
 
-test('fit rotates a piece until it opens toward the first leak', function () {
+test('fit prefers a piece that can continue past the leak', function () {
   var game = Aesthete.createGame({ seats: 1, seed: 7 });
   var state = game.getState();
-  state.players[0].hand[0] = Aesthete.makePiece('cap', 0);
-  state.players[0].selected = 2;
+  for (var i = 0; i < 5; i++) {
+    state.players[0].hand[i] = Aesthete.makePiece('cap', 0);
+  }
+  state.players[0].hand[3] = Aesthete.makePiece('straight', 1);
+  state.players[0].selected = 0;
   var fitted = game.prepareFit();
   assert.strictEqual(fitted.ok, true);
+  assert.strictEqual(fitted.index, 3);
+  assert.strictEqual(state.players[0].hand[3].openings.W, true);
+  assert.strictEqual(state.players[0].hand[3].openings.E, true);
+  assert.strictEqual(state.players[0].hand[0].openings.S, true);
+  assert.strictEqual(game.place(1, 0).reason, 'placed');
+  assert.strictEqual(state.players[0].leaks.length, 1);
+});
+
+test('fit still uses a cap when nothing else can meet the leak', function () {
+  var game = Aesthete.createGame({ seats: 1, seed: 8 });
+  var state = game.getState();
+  for (var i = 0; i < 5; i++) {
+    state.players[0].hand[i] = Aesthete.makePiece('cap', 0);
+  }
+  var fitted = game.prepareFit();
   assert.strictEqual(fitted.index, 0);
   assert.strictEqual(state.players[0].hand[0].openings.W, true);
   assert.strictEqual(state.players[0].hand[0].openings.S, false);
-  assert.strictEqual(game.place(1, 0).reason, 'placed');
 });
 
 test('discard replaces the selected piece and passes a two-seat turn', function () {
