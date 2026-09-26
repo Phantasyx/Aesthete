@@ -1,9 +1,9 @@
 /**
  * Rule checks for the static Aesthete demo.
- * Run: node tests/aesthete-rules.test.js
+ * Run: node test/rules.test.js
  */
 var assert = require('assert');
-var Aesthete = require('../examples/aesthete/rules.js');
+var Aesthete = require('../public/rules.js');
 
 var failures = 0;
 
