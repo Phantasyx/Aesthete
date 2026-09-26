@@ -1,11 +1,11 @@
 # End-to-end notes
 
-Checked on 26 September 2026 against the built files in `dist/`, served locally at `http://127.0.0.1:8091/`. Chrome headless drove the page. Rule tests (`node test/rules.test.js`) passed first, and `node scripts/build.mjs` left `dist/` identical to `site/`.
+Checked on 26 September 2026. The board behavior below was checked before the rename, on the same pipe rules. After the page became Throughline, a second pass rechecked the name, the host, the board size, and the sound control against `dist/` at `http://127.0.0.1:8092/`. Rule tests (`node test/rules.test.js`) passed after the rename, and `node scripts/build.mjs` left `dist/` identical to `site/`.
 
 ## What passed
 
-- The document title is `Throughline · PhantasyX` and the heading is `Throughline`.
-- The canonical URL is `https://throughline.phantasyx.com/`. The page names that host and does not tell anyone to use `/examples/aesthete/`.
+- The document title is `Throughline · PhantasyX` and the heading is `Throughline`. The visible page does not say Conduit.
+- The canonical URL is `https://throughline.phantasyx.com/`. The page names that host and does not tell anyone to use `/examples/aesthete/`. The connection note says “That sealed path is the throughline.”
 - `styles.css`, `rules.js`, and `game.js` are relative URLs, so the same `dist/` works at the subdomain root. A second stylesheet is the Google Fonts request for Fraunces and Outfit. The CSS falls back to Palatino and system sans if that request fails.
 - The board is 48 cells (8 by 6) with one live leak and five pieces.
 - Rotate changed the selected piece from “Opens north.” to “Opens east.”
@@ -27,6 +27,15 @@ Checked again on 26 September 2026, same local server, after the factory loop wa
 - `http://127.0.0.1:8091/audio/factory.mp3` returned 200 with `Content-Type: audio/mpeg` and `Content-Length: 1476799`.
 - At 390px the document still did not scroll sideways while the loop was playing. The heading stayed Throughline.
 - In the desktop browser the pill went from an outline Sound, to a filled Sound on, and back to an outline Sound. The footer credit was on screen after scrolling.
+
+## Rename
+
+Rechecked the same day on `http://127.0.0.1:8092/` after Conduit was renamed Throughline.
+
+- Title, heading, and canonical URL match the list above. Body text includes `throughline.phantasyx.com` and does not include Conduit.
+- The heading fits on a 1280px-wide window and on a 390px-wide window. Neither viewport scrolls sideways. The board still has 48 cells, one live leak, and five pieces.
+- Sound is paused on load. A real click starts the loop (`currentTime` moved from about 0.31s to 0.71s) and the control reads Sound on.
+- In the desktop browser the heading read Throughline, the sealed-path sentence was on screen, and Sound changed to Sound on.
 
 ## What this did not do
 
