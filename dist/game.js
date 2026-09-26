@@ -36,6 +36,7 @@
   var celebrated = false;
   var outcomeSounded = false;
   var boardSerial = 1;
+  var boardStamp = '';
   var audioCtx = null;
 
   function nextSeed() {
@@ -119,6 +120,7 @@
     layer.hidden = false;
     if (panel) {
       panel.classList.add('is-sealed');
+      panel.scrollIntoView({ block: 'center', behavior: 'auto' });
     }
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!reduced) {
@@ -379,6 +381,23 @@
     return false;
   }
 
+  function stampBoard(state) {
+    var bits = [state.size, state.turn, state.over ? 1 : 0, state.result || '', state.winner];
+    if (lastPlaced) bits.push(lastPlaced.x, lastPlaced.y);
+    for (var i = 0; i < state.players.length; i++) {
+      var seat = state.players[i];
+      bits.push(seat.source.x, seat.source.y, seat.gaugeTop.y, seat.gaugeBottom.y, seat.pipes.length);
+      for (var p = 0; p < seat.pipes.length; p++) {
+        var pipe = seat.pipes[p];
+        bits.push(pipe.x, pipe.y, pipe.type, pipe.rotation);
+      }
+      for (var n = 0; n < seat.leaks.length; n++) {
+        bits.push(seat.leaks[n].x, seat.leaks[n].y, seat.leaks[n].dir);
+      }
+    }
+    return bits.join(':');
+  }
+
   function render(text) {
     var state = game.getState();
     var tray = state.players[mySeatIndex(state)];
@@ -403,18 +422,22 @@
       playMiss();
     }
 
-    boardEl.style.setProperty('--cols', String(state.size + 2));
-    boardEl.style.setProperty('--rows', String(state.size));
-    boardEl.style.aspectRatio = (state.size + 2) + ' / ' + state.size;
-    boardEl.innerHTML = '';
-
-    for (var y = 0; y < state.size; y++) {
-      for (var x = 0; x < state.size + 2; x++) {
-        boardEl.appendChild(renderCell(state, x, y, winnerColor));
+    var nextStamp = stampBoard(state);
+    if (nextStamp !== boardStamp) {
+      boardStamp = nextStamp;
+      boardEl.style.setProperty('--cols', String(state.size + 2));
+      boardEl.style.setProperty('--rows', String(state.size));
+      boardEl.style.aspectRatio = (state.size + 2) + ' / ' + state.size;
+      var fragment = document.createDocumentFragment();
+      for (var y = 0; y < state.size; y++) {
+        for (var x = 0; x < state.size + 2; x++) {
+          fragment.appendChild(renderCell(state, x, y, winnerColor));
+        }
       }
+      boardEl.replaceChildren(fragment);
     }
 
-    handEl.innerHTML = '';
+    var handFragment = document.createDocumentFragment();
     tray.hand.forEach(function (piece, index) {
       var button = document.createElement('button');
       button.type = 'button';
@@ -429,8 +452,9 @@
         game.select(index);
         render(messageFor('selected', game.getState()));
       });
-      handEl.appendChild(button);
+      handFragment.appendChild(button);
     });
+    handEl.replaceChildren(handFragment);
 
     var selected = tray.hand[tray.selected];
     compassEl.textContent = state.over
@@ -849,6 +873,8 @@
       return;
     }
 
+    var panel = document.querySelector('.panel');
+    if (panel) panel.scrollIntoView({ block: 'center', behavior: 'auto' });
     render('Here is one perfect fill, from the source to the gauge.');
     (async function () {
       for (var i = 0; i < steps.length; i++) {
