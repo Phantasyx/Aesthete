@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Throughline · PhantasyX</title>
+  <meta name="description" content="Seal a path from the source to the gauge. Lay pipes, close every opening, and raise the score by using more of the tray.">
+  <link rel="canonical" href="https://throughline.phantasyx.com/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23241f1b' width='32' height='32' rx='6'/%3E%3Cpath d='M6 16h20' stroke='%23e4b08a' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  </noscript>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <a class="mark" href="https://phantasyx.com/">PhantasyX</a>
+    <div class="header-tools">
+      <button type="button" id="sound" class="sound" aria-pressed="false" aria-controls="bed">Sound</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Throughline</h1>
+      <p class="lede">Seal a path from the source to the gauge. Lay pipes until every opening is closed. The tray holds enough pipes to fill your side, and every pipe you lay raises the score. Scrap a pipe and it is gone, so a shorter run can still seal, with a lower score.</p>
+    </section>
+
+    <section class="stage" aria-label="Playable board">
+      <div class="board-column">
+        <p id="turn-label" class="turn-label">Your line to move</p>
+        <p id="status" class="status" role="status">The open end beside the source needs a piece that faces it. Turn a piece until it matches, then click the gold mark.</p>
+        <div class="panel">
+          <div id="board" class="board" role="group" aria-label="Pipe board"></div>
+          <div id="celebrate" class="celebrate" hidden>
+            <p class="celebrate-banner">The line is sealed.</p>
+          </div>
+        </div>
+        <p class="legend">The wheel on the left is the source. The dial on the right is the gauge. The gold mark is the only cell you can play. Copper is the first player. Teal is the second.</p>
+      </div>
+
+      <aside class="dock" aria-label="Turn controls">
+        <div class="scoreboard">
+          <p class="score-kicker" id="score-kicker">Score</p>
+          <p id="score" class="score-value">0</p>
+          <p id="score-note" class="score-note">Lay pipes to raise it. A perfect fill uses every pipe in the tray.</p>
+        </div>
+
+        <div class="mode" role="group" aria-label="Who is playing">
+          <button type="button" id="mode-solo" aria-pressed="true">Solo</button>
+          <button type="button" id="mode-live" aria-pressed="false">Two browsers</button>
+        </div>
+
+        <div id="room" class="room" hidden>
+          <p id="room-status" class="room-status">Open a table, then send the code to the other player.</p>
+          <p id="room-code" class="room-code" hidden></p>
+          <div class="actions">
+            <button type="button" id="host">Open a table</button>
+          </div>
+          <form id="join-form" class="join-form">
+            <input id="join-code" maxlength="4" autocomplete="off" spellcheck="false" aria-label="Table code" placeholder="Code">
+            <button type="submit">Sit down</button>
+          </form>
+        </div>
+
+        <div class="actions play-actions">
+          <button type="button" id="rotate">Rotate</button>
+          <button type="button" id="discard">Scrap pipe</button>
+          <button type="button" id="valve" class="is-commit">Seal the line</button>
+        </div>
+        <div class="actions">
+          <button type="button" id="concede">Forfeit</button>
+        </div>
+        <p id="compass" class="compass"></p>
+        <p class="hint">Rotate until the pipe opens toward the gold mark, then click that cell. Scrap throws the pipe away. Seal banks the score only when the gauge is connected.</p>
+
+        <h2>Your pipes</h2>
+        <div id="hand" class="hand" role="group" aria-label="Pipes left in the tray"></div>
+
+        <div class="actions demo-actions">
+          <button type="button" id="watch">Watch a perfect fill</button>
+          <button type="button" id="reset">New puzzle</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="notes">
+      <article>
+        <h2>How the line works</h2>
+        <p>Each player joins two fixed ends. The source opens toward the board, and the gauge opens back toward the pipes. The pieces are caps, elbows, straights, and tees. A finished line has no bare end. That closed path is the throughline. If a pipe runs off the board, that opening can never be closed, and the line cannot be finished.</p>
+      </article>
+      <article>
+        <h2>Two browsers</h2>
+        <p>Open a table and send the code. The other browser sits down on the same board, and you take turns. Both screens show the same score. You can also seal a line on your own.</p>
+      </article>
+      <article>
+        <h2>The score</h2>
+        <p>The tray starts with every pipe the perfect fill needs. Lay more of them and the score climbs. Scrap one and the ceiling drops. A direct run to the gauge still seals. It just banks a smaller number. Chasing the full side is the risk, because a pipe that opens the wrong way can leave an end you can never close.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="colophon">
+    <p>Seal a path from the source to the gauge, with every opening closed.</p>
+    <p>The background is factory ambience by <a href="https://opengameart.org/content/factory-ambiance">yd</a>, released into the public domain on OpenGameArt. It stays quiet until you turn sound on.</p>
+  </footer>
+
+  <audio id="bed" loop preload="none" src="audio/factory.mp3"></audio>
+  <script src="rules.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

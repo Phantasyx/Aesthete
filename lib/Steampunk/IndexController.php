@@ -35,19 +35,9 @@ class IndexController{
             }
         }
         elseif(isset($post["guest"])){
+            $users = new Users($site);
+            $session[User::SESSION_NAME] = $users->tempUser();
             $this->redirect = "$root/chooseGameType.php";
-                $users = new Users($site);
-                $user = $users->tempUser();
-                $login = $users->login($user->getName(),'password');
-            $session[User::SESSION_NAME] = $login;
-            //Why would we return back to index.php we should just display an error if can't login a guestlogin if we are playing as guest????? scratch this code below
-           /* if($login === null) {
-                // Login failed
-                $this->redirect = "$root/index.php?e=1";
-            } else {
-                $this->redirect = "$root/chooseGameType.php";
-            }*/
-
         }else{
             $root = $site->getRoot();
            // $this->redirect = "$root/index.php?";

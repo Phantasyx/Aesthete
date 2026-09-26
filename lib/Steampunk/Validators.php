@@ -21,12 +21,12 @@ class Validators extends Table
 
         // Write to the table
         $sql=<<<SQL
-INSERT INTO $this->tableName(`userid`, `validator`, `date`) 
-VALUES ('$userid','$validator',now())
+INSERT INTO $this->tableName(`userid`, `validator`, `date`)
+VALUES (?, ?, now())
 SQL;
         $pdo = $this->pdo();
         $statement = $pdo->prepare($sql);
-        $statement->execute();
+        $statement->execute(array($userid, $validator));
 
         return $validator;
     }

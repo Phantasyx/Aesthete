@@ -11,6 +11,7 @@ class Site
     private $dbPassword = null; ///< Database password
     private $tablePrefix = '';  ///< Database table prefix
     private $root = '';
+    private $publicOrigin = ''; ///< Scheme and host for absolute links, no trailing slash
     private $pdo = null; ///< The PDO object
 
     /**
@@ -43,7 +44,41 @@ class Site
     public function setRoot($root)
     {
         $this->root = $root;
-    }         ///< Site root
+    }
+
+    /**
+     * @return string
+     */
+    public function getPublicOrigin()
+    {
+        return $this->publicOrigin;
+    }
+
+    /**
+     * @param string $publicOrigin Scheme and host, such as https://play.example.com
+     */
+    public function setPublicOrigin($publicOrigin)
+    {
+        $this->publicOrigin = rtrim((string)$publicOrigin, '/');
+    }
+
+    /**
+     * Build a site URL. Uses the public origin when one is configured.
+     * @param string $path Path beginning with /
+     * @return string
+     */
+    public function url($path)
+    {
+        $root = (string)$this->root;
+        if ($root !== '' && $root[0] !== '/') {
+            $root = '/' . $root;
+        }
+        $root = rtrim($root, '/');
+        if ($path === '' || $path[0] !== '/') {
+            $path = '/' . $path;
+        }
+        return $this->publicOrigin . $root . $path;
+    }
 
     /**
      * Configure the database
@@ -76,11 +111,14 @@ class Site
             return $this->pdo;
         }
 
+        if ($this->dbHost === null || $this->dbHost === '') {
+            die('Database is not configured');
+        }
+
         try {
             $this->pdo = new \PDO($this->dbHost, $this->dbUser, $this->dbPassword);
         } catch(\PDOException $e) {
-            // If we can't connect we die!
-            die("Unable to select database");
+            die('Unable to select database');
         }
 
         return $this->pdo;
