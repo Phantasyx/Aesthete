@@ -1,9 +1,9 @@
 /**
- * Rule checks for the Conduit demo.
+ * Rule checks for the Throughline demo.
  * Run: node test/rules.test.js
  */
 var assert = require('assert');
-var Conduit = require('../site/rules.js');
+var Throughline = require('../site/rules.js');
 
 var failures = 0;
 
@@ -19,23 +19,23 @@ function test(name, fn) {
 }
 
 test('rotation matches the pipe pieces', function () {
-  var elbow = Conduit.makePiece('elbow', 0);
+  var elbow = Throughline.makePiece('elbow', 0);
   assert.deepStrictEqual(elbow.openings, { N: false, E: false, S: true, W: true });
-  var turned = Conduit.makePiece('elbow', 2);
+  var turned = Throughline.makePiece('elbow', 2);
   assert.deepStrictEqual(turned.openings, { N: true, E: true, S: false, W: false });
-  var straight = Conduit.makePiece('straight', 1);
+  var straight = Throughline.makePiece('straight', 1);
   assert.deepStrictEqual(straight.openings, { N: true, E: false, S: true, W: false });
 });
 
 test('a pipe can land only on your own leak, opening toward it', function () {
-  var game = Conduit.createGame({ seats: 1, seed: 1 });
+  var game = Throughline.createGame({ seats: 1, seed: 1 });
   var state = game.getState();
-  state.players[0].hand[0] = Conduit.makePiece('straight', 0);
+  state.players[0].hand[0] = Throughline.makePiece('straight', 0);
   state.players[0].selected = 0;
   assert.strictEqual(game.place(3, 3).reason, 'not-leak');
-  state.players[0].hand[0] = Conduit.makePiece('cap', 0);
+  state.players[0].hand[0] = Throughline.makePiece('cap', 0);
   assert.strictEqual(game.place(1, 0).reason, 'facing');
-  state.players[0].hand[0] = Conduit.makePiece('straight', 0);
+  state.players[0].hand[0] = Throughline.makePiece('straight', 0);
   assert.strictEqual(game.place(1, 0).reason, 'placed');
   assert.strictEqual(state.players[0].pipes.length, 1);
   assert.strictEqual(state.players[0].leaks.length, 1);
@@ -44,9 +44,9 @@ test('a pipe can land only on your own leak, opening toward it', function () {
 });
 
 test('opening the valve on an open line loses the seat', function () {
-  var game = Conduit.createGame({ seats: 1, seed: 2 });
+  var game = Throughline.createGame({ seats: 1, seed: 2 });
   var state = game.getState();
-  state.players[0].hand[0] = Conduit.makePiece('cap', 1);
+  state.players[0].hand[0] = Throughline.makePiece('cap', 1);
   state.players[0].selected = 0;
   assert.strictEqual(game.place(1, 0).reason, 'placed');
   assert.strictEqual(game.openValve().reason, 'leak');
@@ -55,8 +55,8 @@ test('opening the valve on an open line loses the seat', function () {
 });
 
 test('the scripted upper line seals the gauge', function () {
-  var game = Conduit.createGame({ seats: 1, seed: 3 });
-  Conduit.UPPER_LINE.forEach(function (step) {
+  var game = Throughline.createGame({ seats: 1, seed: 3 });
+  Throughline.UPPER_LINE.forEach(function (step) {
     var result = game.scriptedPlace(step);
     assert.strictEqual(result.reason, 'placed', JSON.stringify(step));
   });
@@ -68,9 +68,9 @@ test('the scripted upper line seals the gauge', function () {
 });
 
 test('an opening off the board cannot be sealed', function () {
-  var game = Conduit.createGame({ seats: 1, seed: 4 });
+  var game = Throughline.createGame({ seats: 1, seed: 4 });
   var state = game.getState();
-  state.players[0].hand[0] = Conduit.makePiece('elbow', 1);
+  state.players[0].hand[0] = Throughline.makePiece('elbow', 1);
   state.players[0].selected = 0;
   assert.deepStrictEqual(state.players[0].hand[0].openings, {
     N: true, E: false, S: false, W: true
@@ -81,14 +81,14 @@ test('an opening off the board cannot be sealed', function () {
 });
 
 test('two seats alternate, and a bad valve gives the other seat the match', function () {
-  var game = Conduit.createGame({ seats: 2, seed: 5 });
+  var game = Throughline.createGame({ seats: 2, seed: 5 });
   var state = game.getState();
-  state.players[0].hand[0] = Conduit.makePiece('straight', 0);
+  state.players[0].hand[0] = Throughline.makePiece('straight', 0);
   state.players[0].selected = 0;
   assert.strictEqual(game.place(1, 0).reason, 'placed');
   assert.strictEqual(state.turn, 1);
   assert.strictEqual(game.place(2, 0).reason, 'not-leak');
-  state.players[1].hand[state.players[1].selected] = Conduit.makePiece('straight', 0);
+  state.players[1].hand[state.players[1].selected] = Throughline.makePiece('straight', 0);
   assert.strictEqual(game.place(1, 5).reason, 'placed');
   assert.strictEqual(state.turn, 0);
   assert.strictEqual(game.openValve().reason, 'leak');
@@ -96,12 +96,12 @@ test('two seats alternate, and a bad valve gives the other seat the match', func
 });
 
 test('fit prefers a piece that can continue past the leak', function () {
-  var game = Conduit.createGame({ seats: 1, seed: 7 });
+  var game = Throughline.createGame({ seats: 1, seed: 7 });
   var state = game.getState();
   for (var i = 0; i < 5; i++) {
-    state.players[0].hand[i] = Conduit.makePiece('cap', 0);
+    state.players[0].hand[i] = Throughline.makePiece('cap', 0);
   }
-  state.players[0].hand[3] = Conduit.makePiece('straight', 1);
+  state.players[0].hand[3] = Throughline.makePiece('straight', 1);
   state.players[0].selected = 0;
   var fitted = game.prepareFit();
   assert.strictEqual(fitted.ok, true);
@@ -114,10 +114,10 @@ test('fit prefers a piece that can continue past the leak', function () {
 });
 
 test('fit still uses a cap when nothing else can meet the leak', function () {
-  var game = Conduit.createGame({ seats: 1, seed: 8 });
+  var game = Throughline.createGame({ seats: 1, seed: 8 });
   var state = game.getState();
   for (var i = 0; i < 5; i++) {
-    state.players[0].hand[i] = Conduit.makePiece('cap', 0);
+    state.players[0].hand[i] = Throughline.makePiece('cap', 0);
   }
   var fitted = game.prepareFit();
   assert.strictEqual(fitted.index, 0);
@@ -126,7 +126,7 @@ test('fit still uses a cap when nothing else can meet the leak', function () {
 });
 
 test('discard replaces the selected piece and passes a two-seat turn', function () {
-  var game = Conduit.createGame({ seats: 2, seed: 6 });
+  var game = Throughline.createGame({ seats: 2, seed: 6 });
   var state = game.getState();
   game.discard();
   assert.strictEqual(state.players[0].pipes.length, 0);

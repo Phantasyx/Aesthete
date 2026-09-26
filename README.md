@@ -1,10 +1,10 @@
-# Conduit
+# Throughline
 
-A static connectivity study for [PhantasyX](https://phantasyx.com/), hosted at [conduit.phantasyx.com](https://conduit.phantasyx.com/).
+A static connectivity study for [PhantasyX](https://phantasyx.com/), hosted at [throughline.phantasyx.com](https://throughline.phantasyx.com/).
 
 Each seat owns a source and a gauge on one shared board. A turn places a pipe on a leak in that seat’s own line, or discards the piece. The line counts only when every opening meets another opening and the gauge is connected. Opening the valve while anything is still open loses the seat.
 
-This is not a peer-to-peer network. The pipe rules come from the 2017 Aesthete study, which stored the shared turn in MySQL. Each browser talked to PHP, and the waiting seat reloaded every two seconds. The browsers never connected to each other. That server remains in [Phantasyx/Aesthete](https://github.com/Phantasyx/Aesthete). Conduit plays the same rules in the browser. The board is not uploaded.
+This is not a peer-to-peer network. The pipe rules come from the 2017 Aesthete study, which stored the shared turn in MySQL. Each browser talked to PHP, and the waiting seat reloaded every two seconds. The browsers never connected to each other. That server remains in [Phantasyx/Aesthete](https://github.com/Phantasyx/Aesthete). Throughline plays the same rules in the browser. The board is not uploaded.
 
 The page is a PhantasyX example. PhantasyX Studios is named only in the footer, for this study.
 
@@ -42,11 +42,11 @@ What the last browser pass checked is in `E2E.md`. How to attach the subdomain i
 
 ## Repository
 
-This project is meant to be `Phantasyx/conduit`. Creating organization repositories is not granted to the automation token. Until that empty public repo exists, the standalone history is the branch `cursor/conduit-demo-2798` on [Phantasyx/Aesthete](https://github.com/Phantasyx/Aesthete/tree/cursor/conduit-demo-2798).
+This project is meant to be `Phantasyx/throughline`. Creating organization repositories is not granted to the automation token. Until that empty public repo exists, the standalone history is the branch `cursor/throughline-demo-2798` on [Phantasyx/Aesthete](https://github.com/Phantasyx/Aesthete/tree/cursor/throughline-demo-2798).
 
 ```bash
-git fetch origin cursor/conduit-demo-2798
-git push https://github.com/Phantasyx/conduit.git FETCH_HEAD:main
+git fetch origin cursor/throughline-demo-2798
+git push https://github.com/Phantasyx/throughline.git FETCH_HEAD:main
 ```
 
 There are no secrets in this project. Do not add any.
