@@ -15,7 +15,10 @@
 <body>
   <header class="top">
     <a class="mark" href="https://phantasyx.com/">PhantasyX</a>
-    <p class="example-index">Example 03</p>
+    <div class="header-tools">
+      <button type="button" id="sound" class="sound" aria-pressed="false" aria-controls="bed">Sound</button>
+      <p class="example-index">Example 03</p>
+    </div>
   </header>
 
   <main>
@@ -88,9 +91,40 @@
 
   <footer class="colophon">
     <p><a href="https://phantasyx.com/">PhantasyX</a>. Conduit is an interactive example on <a href="https://conduit.phantasyx.com/">conduit.phantasyx.com</a>. If a credit needs to distinguish the study from the practice, call the study PhantasyX Studios and leave the practice named PhantasyX.</p>
+    <p>Factory ambiance by <a href="https://opengameart.org/content/factory-ambiance">yd</a>, CC0, via OpenGameArt. Sound stays off until you turn it on.</p>
   </footer>
 
+  <audio id="bed" loop preload="none" src="audio/factory.mp3"></audio>
   <script src="rules.js"></script>
   <script src="game.js"></script>
+  <script>
+    (function () {
+      var button = document.getElementById('sound');
+      var bed = document.getElementById('bed');
+      if (!button || !bed) return;
+      bed.volume = 0.35;
+      button.addEventListener('click', function () {
+        if (!bed.paused) {
+          bed.pause();
+          button.setAttribute('aria-pressed', 'false');
+          button.textContent = 'Sound';
+          return;
+        }
+        var started = bed.play();
+        var markOn = function () {
+          button.setAttribute('aria-pressed', 'true');
+          button.textContent = 'Sound on';
+        };
+        if (started && typeof started.then === 'function') {
+          started.then(markOn).catch(function () {
+            button.setAttribute('aria-pressed', 'false');
+            button.textContent = 'Sound unavailable';
+          });
+          return;
+        }
+        markOn();
+      });
+    })();
+  </script>
 </body>
 </html>

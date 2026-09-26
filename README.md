@@ -14,6 +14,7 @@ Build output is `conduit/dist/`, produced by `node conduit/scripts/build.mjs`. H
 - `conduit/dist/styles.css`
 - `conduit/dist/rules.js`
 - `conduit/dist/game.js`
+- `conduit/dist/audio/factory.mp3`
 
 ## PHP match server
 
