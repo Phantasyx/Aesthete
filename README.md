@@ -29,7 +29,7 @@ Open `http://127.0.0.1:8080/`.
 - **New board** deals another solvable route.
 - **Watch a finished line** plays one solution for a fresh board.
 - **Fit the opening** turns a piece so it can continue the line. You still click the cell to place it.
-- **Sound** starts a looping factory ambience. It does not play until that control is pressed. A finished line plays a short chime on the click that opens the valve.
+- **Sound** starts a looping factory ambience. It does not play until that control is pressed. Opening the valve plays a short rising chime when the line is sealed, and a lower tone when the line is still open. Both sounds start from that click.
 
 The loop is “Factory ambiance” by yd, released into the public domain on [OpenGameArt](https://opengameart.org/content/factory-ambiance). The file in `site/audio/` is a 96 kbps MP3 re-encode of that upload. Credit is in the page footer.
 
