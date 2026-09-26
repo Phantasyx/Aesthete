@@ -55,22 +55,22 @@ var server = createServer(async function (req, res) {
     send(res, 200, lobby.open());
     return;
   }
-  var join = url.pathname.match(/^\/api\/room\/([A-Za-z0-9]{4})\/join$/);
-  if (join && req.method === 'POST') {
-    var joined = lobby.join(join[1]);
+  var joinMatch = url.pathname.match(/^\/api\/room\/([A-Za-z0-9]{4})\/join$/);
+  if (joinMatch && req.method === 'POST') {
+    var joined = lobby.join(joinMatch[1]);
     send(res, joined.ok ? 200 : 409, joined);
     return;
   }
-  var act = url.pathname.match(/^\/api\/room\/([A-Za-z0-9]{4})\/act$/);
-  if (act && req.method === 'POST') {
+  var actMatch = url.pathname.match(/^\/api\/room\/([A-Za-z0-9]{4})\/act$/);
+  if (actMatch && req.method === 'POST') {
     var body = await readBody(req);
-    var result = lobby.act(act[1], body.token, body);
+    var result = lobby.act(actMatch[1], body.token, body);
     send(res, result.ok ? 200 : 409, result);
     return;
   }
-  var view = url.pathname.match(/^\/api\/room\/([A-Za-z0-9]{4})$/);
-  if (view && req.method === 'GET') {
-    var room = lobby.view(view[1]);
+  var viewMatch = url.pathname.match(/^\/api\/room\/([A-Za-z0-9]{4})$/);
+  if (viewMatch && req.method === 'GET') {
+    var room = lobby.view(viewMatch[1]);
     send(res, room.ok ? 200 : 404, room);
     return;
   }

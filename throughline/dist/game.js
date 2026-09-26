@@ -321,7 +321,7 @@
     } else if (state.result === 'leak' || state.result === 'concede') {
       scoreNoteEl.textContent = 'The round is over. A score banks only when that line is sealed.';
     } else {
-      scoreNoteEl.textContent = 'Copper has ' + state.players[0].pipes.length + ' laid. Teal has ' + state.players[1].pipes.length + ' laid. A perfect fill is ' + state.players[0].supply + ' pipes on each side.';
+      scoreNoteEl.textContent = 'Copper has ' + state.players[0].pipes.length + ' laid and ' + state.players[0].hand.length + ' left. Teal has ' + state.players[1].pipes.length + ' laid and ' + state.players[1].hand.length + ' left. A perfect fill is ' + state.players[0].supply + ' pipes on each side.';
     }
   }
 

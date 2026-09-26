@@ -48,12 +48,6 @@
           <p id="score-note" class="score-note">Lay pipes to raise it. A perfect fill uses every pipe in the tray.</p>
         </div>
 
-        <ol class="steps">
-          <li>Rotate a pipe until it opens toward the gold mark, then click that cell.</li>
-          <li>Scrap throws a pipe away. You cannot get it back, and your best possible score drops.</li>
-          <li>Seal the line once the gauge is connected. More pipes on the board means a higher score.</li>
-        </ol>
-
         <div class="mode" role="group" aria-label="Who is playing">
           <button type="button" id="mode-solo" aria-pressed="true">Solo</button>
           <button type="button" id="mode-live" aria-pressed="false">Two browsers</button>
@@ -71,21 +65,19 @@
           </form>
         </div>
 
-        <h2>Your pipes</h2>
-        <div id="hand" class="hand" role="group" aria-label="Pipes left in the tray"></div>
-        <p id="compass" class="compass"></p>
-        <div class="actions">
+        <div class="actions play-actions">
           <button type="button" id="rotate">Rotate</button>
           <button type="button" id="discard">Scrap pipe</button>
-        </div>
-        <p class="hint">Scrap takes that pipe out of the puzzle. A short connection can still reach the gauge, and it will score lower.</p>
-
-        <h2>Bank the score</h2>
-        <div class="actions">
           <button type="button" id="valve" class="is-commit">Seal the line</button>
+        </div>
+        <div class="actions">
           <button type="button" id="concede">Forfeit</button>
         </div>
-        <p class="hint">Seal while something is still open and the score does not bank. In a shared table, the other player takes the round.</p>
+        <p id="compass" class="compass"></p>
+        <p class="hint">Rotate until the pipe opens toward the gold mark, then click that cell. Scrap throws the pipe away. Seal banks the score only when the gauge is connected.</p>
+
+        <h2>Your pipes</h2>
+        <div id="hand" class="hand" role="group" aria-label="Pipes left in the tray"></div>
 
         <div class="actions demo-actions">
           <button type="button" id="watch">Watch a perfect fill</button>
