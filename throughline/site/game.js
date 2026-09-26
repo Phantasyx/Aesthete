@@ -26,6 +26,7 @@
   var generation = 0;
   var lastPlaced = null;
   var celebrated = false;
+  var outcomeSounded = false;
   var boardSerial = 1;
   var audioCtx = null;
 
@@ -50,31 +51,44 @@
     });
   }
 
+  function playTone(freq, start, duration, peak) {
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(peak, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(start);
+    osc.stop(start + duration + 0.02);
+  }
+
   function playChime() {
     if (!audioCtx || audioCtx.state !== 'running') {
       return;
     }
     var now = audioCtx.currentTime;
     [523.25, 659.25, 783.99].forEach(function (freq, index) {
-      var osc = audioCtx.createOscillator();
-      var gain = audioCtx.createGain();
-      var start = now + index * 0.09;
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.07, start + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.55);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(start);
-      osc.stop(start + 0.6);
+      playTone(freq, now + index * 0.09, 0.55, 0.07);
     });
+  }
+
+  function playMiss() {
+    if (!audioCtx || audioCtx.state !== 'running') {
+      return;
+    }
+    var now = audioCtx.currentTime;
+    playTone(220, now, 0.22, 0.05);
+    playTone(164.81, now + 0.12, 0.4, 0.05);
   }
 
   function clearCelebration() {
     var layer = document.getElementById('celebrate');
     var panel = document.querySelector('.panel');
     celebrated = false;
+    outcomeSounded = false;
     if (layer) {
       layer.hidden = true;
       var sparks = layer.querySelectorAll('.spark');
@@ -110,6 +124,7 @@
         layer.appendChild(spark);
       }
     }
+    outcomeSounded = true;
     playChime();
   }
 
@@ -267,6 +282,9 @@
     }).join(' ');
     if (state.result === 'sealed') {
       showCelebration();
+    } else if (state.result === 'leak' && !outcomeSounded) {
+      outcomeSounded = true;
+      playMiss();
     }
 
     boardEl.style.setProperty('--cols', String(state.size + 2));
