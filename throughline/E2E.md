@@ -70,6 +70,15 @@ Checked on 26 September 2026 against `http://127.0.0.1:8094/`, after the public 
 - The header still links the PhantasyX name to `https://phantasyx.com/`.
 - At 390px the document did not scroll sideways, and the board still had 48 cells.
 
+## Phone and desktop layout
+
+Checked on 26 September 2026 against `http://127.0.0.1:8094/` in headless Chrome. Clicks were real mouse events.
+
+- At 1280 the board and the controls sit side by side, and the three notes sit in a row. Cells are about 76px. There is no sideways scroll. A click on the gold mark laid a pipe and the score became 1. Watch a perfect fill ended with the banner “The line is sealed.”, score 18, sixteen sparks, and the chime at 523 Hz, 659 Hz, and 784 Hz.
+- At 768 the board stays beside the controls. Cells are about 48px. Notes sit in two columns. Controls are at least 44px tall. No sideways scroll.
+- At 390 the page is one column. Cells are about 44px, tray pieces about 47px, and the main controls are at least 44px tall. No sideways scroll. A click laid a pipe, then Watch a perfect fill sealed the line with the same banner and chime. The sealed board was on screen (the panel sat inside the 844px-tall viewport).
+- The lede still starts with “Seal a path”. The page does not call itself a portfolio example.
+
 ## What this did not do
 
 This pass did not deploy to Cloudflare and did not open `https://throughline.phantasyx.com/`. The Worker and the Durable Object are in the repo. Attaching the hostname is still `npx wrangler deploy` from an account that owns the `phantasyx.com` zone, as written in `HOSTING.md`.
