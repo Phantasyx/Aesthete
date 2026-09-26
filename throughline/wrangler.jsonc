@@ -1,5 +1,5 @@
 {
-  "name": "conduit",
+  "name": "throughline",
   "compatibility_date": "2026-09-26",
   "workers_dev": true,
   "assets": {
@@ -7,7 +7,7 @@
   },
   "routes": [
     {
-      "pattern": "conduit.phantasyx.com",
+      "pattern": "throughline.phantasyx.com",
       "custom_domain": true
     }
   ]

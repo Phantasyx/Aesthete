@@ -1,4 +1,4 @@
-name: conduit
+name: throughline
 
 on:
   push:
@@ -12,6 +12,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: node conduit/test/rules.test.js
-      - run: node conduit/scripts/build.mjs
-      - run: git diff --exit-code -- conduit/dist
+      - run: node throughline/test/rules.test.js
+      - run: node throughline/scripts/build.mjs
+      - run: git diff --exit-code -- throughline/dist

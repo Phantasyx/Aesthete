@@ -1,6 +1,6 @@
 /**
  * Copy the site sources into dist/, which is what Wrangler uploads.
- * Run from anywhere: node conduit/scripts/build.mjs
+ * Run from anywhere: node throughline/scripts/build.mjs
  * or, inside this project: node scripts/build.mjs
  */
 import { cpSync, readdirSync, rmSync } from 'node:fs';

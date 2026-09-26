@@ -303,7 +303,7 @@
     generation += 1;
     locked = false;
     lastPlaced = null;
-    game = Conduit.createGame({ seats: seats, seed: (Date.now() ^ (seats * 97)) >>> 0 });
+    game = Throughline.createGame({ seats: seats, seed: (Date.now() ^ (seats * 97)) >>> 0 });
     render(text || startMessage());
     document.getElementById('mode-solo').setAttribute('aria-pressed', seats === 1 ? 'true' : 'false');
     document.getElementById('mode-hotseat').setAttribute('aria-pressed', seats === 2 ? 'true' : 'false');
@@ -373,12 +373,12 @@
     seats = 1;
     locked = true;
     lastPlaced = null;
-    game = Conduit.createGame({ seats: 1, seed: 11 });
+    game = Throughline.createGame({ seats: 1, seed: 11 });
     var local = game;
     document.getElementById('mode-solo').setAttribute('aria-pressed', 'true');
     document.getElementById('mode-hotseat').setAttribute('aria-pressed', 'false');
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var steps = Conduit.UPPER_LINE;
+    var steps = Throughline.UPPER_LINE;
 
     if (reduced) {
       steps.forEach(function (step) {
@@ -399,7 +399,7 @@
         var step = steps[i];
         var preview = local.getState();
         preview.players[0].selected = 0;
-        preview.players[0].hand[0] = Conduit.makePiece(step.type, step.rotation);
+        preview.players[0].hand[0] = Throughline.makePiece(step.type, step.rotation);
         render('Piece ' + (i + 1) + ' of ' + steps.length + '. ' + describeOpenings(preview.players[0].hand[0].openings));
         await delay(700);
         if (token !== generation) {
