@@ -28,7 +28,7 @@ test('rotation matches the pipe pieces', function () {
 });
 
 test('a pipe can land only on your own leak, opening toward it', function () {
-  var game = Throughline.createGame({ seats: 1, seed: 1 });
+  var game = Throughline.createGame({ seats: 1, seed: 1, layout: 'classic' });
   var state = game.getState();
   state.players[0].hand[0] = Throughline.makePiece('straight', 0);
   state.players[0].selected = 0;
@@ -44,7 +44,7 @@ test('a pipe can land only on your own leak, opening toward it', function () {
 });
 
 test('opening the valve on an open line loses the seat', function () {
-  var game = Throughline.createGame({ seats: 1, seed: 2 });
+  var game = Throughline.createGame({ seats: 1, seed: 2, layout: 'classic' });
   var state = game.getState();
   state.players[0].hand[0] = Throughline.makePiece('cap', 1);
   state.players[0].selected = 0;
@@ -55,7 +55,7 @@ test('opening the valve on an open line loses the seat', function () {
 });
 
 test('the scripted upper line seals the gauge', function () {
-  var game = Throughline.createGame({ seats: 1, seed: 3 });
+  var game = Throughline.createGame({ seats: 1, seed: 3, layout: 'classic' });
   Throughline.UPPER_LINE.forEach(function (step) {
     var result = game.scriptedPlace(step);
     assert.strictEqual(result.reason, 'placed', JSON.stringify(step));
@@ -68,7 +68,7 @@ test('the scripted upper line seals the gauge', function () {
 });
 
 test('an opening off the board cannot be sealed', function () {
-  var game = Throughline.createGame({ seats: 1, seed: 4 });
+  var game = Throughline.createGame({ seats: 1, seed: 4, layout: 'classic' });
   var state = game.getState();
   state.players[0].hand[0] = Throughline.makePiece('elbow', 1);
   state.players[0].selected = 0;
@@ -81,7 +81,7 @@ test('an opening off the board cannot be sealed', function () {
 });
 
 test('two seats alternate, and a bad valve gives the other seat the match', function () {
-  var game = Throughline.createGame({ seats: 2, seed: 5 });
+  var game = Throughline.createGame({ seats: 2, seed: 5, layout: 'classic' });
   var state = game.getState();
   state.players[0].hand[0] = Throughline.makePiece('straight', 0);
   state.players[0].selected = 0;
@@ -96,7 +96,7 @@ test('two seats alternate, and a bad valve gives the other seat the match', func
 });
 
 test('fit prefers a piece that can continue past the leak', function () {
-  var game = Throughline.createGame({ seats: 1, seed: 7 });
+  var game = Throughline.createGame({ seats: 1, seed: 7, layout: 'classic' });
   var state = game.getState();
   for (var i = 0; i < 5; i++) {
     state.players[0].hand[i] = Throughline.makePiece('cap', 0);
@@ -114,7 +114,7 @@ test('fit prefers a piece that can continue past the leak', function () {
 });
 
 test('fit still uses a cap when nothing else can meet the leak', function () {
-  var game = Throughline.createGame({ seats: 1, seed: 8 });
+  var game = Throughline.createGame({ seats: 1, seed: 8, layout: 'classic' });
   var state = game.getState();
   for (var i = 0; i < 5; i++) {
     state.players[0].hand[i] = Throughline.makePiece('cap', 0);
@@ -132,6 +132,47 @@ test('discard replaces the selected piece and passes a two-seat turn', function 
   assert.strictEqual(state.players[0].pipes.length, 0);
   assert.strictEqual(state.players[0].hand.length, 5);
   assert.strictEqual(state.turn, 1);
+});
+
+test('a generated board can be sealed, and two seeds are not the same route', function () {
+  var seen = {};
+  for (var seed = 1; seed <= 20; seed++) {
+    var game = Throughline.createGame({ seats: 1, seed: seed });
+    var state = game.getState();
+    var signature = state.solutions[0].map(function (step) {
+      return step.x + ',' + step.y;
+    }).join('|');
+    seen[signature] = true;
+    assert.ok(state.solutions[0].length >= 4);
+    var results = game.replay(0);
+    results.forEach(function (result, index) {
+      assert.strictEqual(result.reason, 'placed', signature + ' step ' + index);
+    });
+    assert.strictEqual(game.isSealed(0), true, signature);
+    assert.strictEqual(game.openValve().reason, 'sealed');
+  }
+  assert.ok(Object.keys(seen).length >= 2, JSON.stringify(Object.keys(seen)));
+});
+
+test('two generated lines do not share a cell, and each line can be sealed', function () {
+  var game = Throughline.createGame({ seats: 2, seed: 42 });
+  var state = game.getState();
+  var upper = {};
+  state.solutions[0].forEach(function (step) {
+    upper[step.x + ',' + step.y] = true;
+  });
+  state.solutions[1].forEach(function (step) {
+    assert.strictEqual(upper[step.x + ',' + step.y], undefined);
+  });
+  assert.notStrictEqual(state.players[0].source.y, state.players[1].source.y);
+  game.replay(0).forEach(function (result) {
+    assert.strictEqual(result.reason, 'placed');
+  });
+  assert.strictEqual(game.isSealed(0), true);
+  game.replay(1).forEach(function (result) {
+    assert.strictEqual(result.reason, 'placed');
+  });
+  assert.strictEqual(game.isSealed(1), true);
 });
 
 if (failures > 0) {

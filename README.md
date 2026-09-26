@@ -2,7 +2,7 @@
 
 Aesthete is a two-seat connectivity puzzle. Each seat owns a source and a gauge on one shared board. A turn places a pipe on a leak in that seat’s own line, or discards the piece. The line counts only when every opening meets another opening and the gauge is connected. Opening the valve while anything is still open loses the seat.
 
-The playable portfolio project is `throughline/`, renamed from the Aesthete study and meant to be hosted at `throughline.phantasyx.com`. It is a static browser page, not a change to the PHP match. Its own git history is the branch `cursor/throughline-demo-2798`, ready to become `Phantasyx/throughline` when that repository can be created. The automation token can push here and cannot create organization repositories.
+The playable portfolio project is `throughline/`, hosted at `throughline.phantasyx.com`. It is a static browser page, not a change to the PHP match. Its own git history is the branch `cursor/throughline-demo-2798`, ready to become `Phantasyx/throughline` when that repository can be created. The automation token can push here and cannot create organization repositories.
 
 The PHP application stores a shared turn in MySQL. Each browser talks to that server, and the waiting seat reloads every two seconds. The browsers do not connect to each other.
 
@@ -36,7 +36,7 @@ php -S localhost:8080
 
 Guest seats get a random password and are signed in from that insert. There is no shared guest password.
 
-The PHP board still requests tile art from the old class-project image host. Those images are not in this repository. Use `throughline/dist/` when you need a self-contained board.
+The PHP board still requests tile art from the old image host. Those images are not in this repository. Use `throughline/dist/` when you need a self-contained board.
 
 ## Credentials
 
@@ -48,4 +48,4 @@ Account email and password updates use bound parameters. Password links use `AES
 
 1. Deploy `throughline/dist/` to the Worker named `throughline` and attach the custom domain `throughline.phantasyx.com`. Steps are in `throughline/HOSTING.md`.
 2. Leave the PHP application off that host. It needs MySQL and a session store.
-3. The page credits PhantasyX. PhantasyX Studios is named only in the footer, for this study.
+3. The page credits PhantasyX. Do not deploy this Worker from an unattended session unless you own the zone.

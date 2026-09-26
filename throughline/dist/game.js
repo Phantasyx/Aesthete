@@ -25,6 +25,93 @@
   var locked = false;
   var generation = 0;
   var lastPlaced = null;
+  var celebrated = false;
+  var boardSerial = 1;
+  var audioCtx = null;
+
+  function nextSeed() {
+    boardSerial += 1;
+    return (Date.now() + boardSerial * 997) >>> 0;
+  }
+
+  function unlockAudio() {
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) {
+      return Promise.resolve(null);
+    }
+    if (!audioCtx) {
+      audioCtx = new AudioContext();
+    }
+    var ready = audioCtx.state === 'suspended' ? audioCtx.resume() : Promise.resolve();
+    return ready.then(function () {
+      return audioCtx;
+    }).catch(function () {
+      return null;
+    });
+  }
+
+  function playChime() {
+    if (!audioCtx || audioCtx.state !== 'running') {
+      return;
+    }
+    var now = audioCtx.currentTime;
+    [523.25, 659.25, 783.99].forEach(function (freq, index) {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      var start = now + index * 0.09;
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.07, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.55);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(start);
+      osc.stop(start + 0.6);
+    });
+  }
+
+  function clearCelebration() {
+    var layer = document.getElementById('celebrate');
+    var panel = document.querySelector('.panel');
+    celebrated = false;
+    if (layer) {
+      layer.hidden = true;
+      var sparks = layer.querySelectorAll('.spark');
+      for (var i = 0; i < sparks.length; i++) {
+        sparks[i].remove();
+      }
+    }
+    if (panel) {
+      panel.classList.remove('is-sealed');
+    }
+  }
+
+  function showCelebration() {
+    var layer = document.getElementById('celebrate');
+    var panel = document.querySelector('.panel');
+    if (!layer || celebrated) {
+      return;
+    }
+    celebrated = true;
+    layer.hidden = false;
+    if (panel) {
+      panel.classList.add('is-sealed');
+    }
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduced) {
+      for (var i = 0; i < 16; i++) {
+        var spark = document.createElement('span');
+        spark.className = 'spark';
+        spark.style.left = (8 + Math.random() * 84) + '%';
+        spark.style.bottom = (6 + Math.random() * 28) + '%';
+        spark.style.animationDelay = (Math.random() * 0.2) + 's';
+        spark.style.background = i % 2 === 0 ? '#e6c27a' : '#e4b08a';
+        layer.appendChild(spark);
+      }
+    }
+    playChime();
+  }
 
   function currentSeat(state) {
     return state.players[state.turn];
@@ -38,7 +125,7 @@
     var open = DIRS.filter(function (dir) { return openings[dir]; })
       .map(function (dir) { return DIR_NAME[dir]; });
     if (open.length === 0) {
-      return 'No open side.';
+      return 'This piece has no open side.';
     }
     if (open.length === 1) {
       return 'Opens ' + open[0] + '.';
@@ -50,56 +137,64 @@
   }
 
   function startMessage() {
-    return 'The leak beside the source faces west. Fit a piece so it opens west, then click the marked cell.';
+    var state = game.getState();
+    var leak = currentSeat(state).leaks[0];
+    var side = DIR_NAME[leak.dir];
+    if (state.seats === 2) {
+      return 'Two people share this board. The upper line moves first, and the open end needs a piece that faces ' + side + '. Pass the device when the turn changes. Nothing is sent to a server.';
+    }
+    return 'The open end beside the source needs a piece that opens ' + side + '. Turn a piece until it faces that way, then click the gold mark.';
   }
 
   function messageFor(reason, state) {
     if (reason === 'facing') {
-      return 'That piece does not open toward the gold mark. Rotate it, or fit a different piece.';
+      return 'That piece does not open toward the gold mark. Rotate it, or choose a different piece.';
     }
     if (reason === 'not-leak') {
-      return 'Pipes land on a leak in the line that is moving. The gold mark is that open end.';
+      return 'You can only place a piece on the gold mark, on the line that is moving.';
     }
     if (reason === 'other-leak') {
-      return 'That leak belongs to the other line. This turn can extend only the line that is moving.';
+      return 'That opening belongs to the other line. On this turn you can only extend the line that is moving.';
     }
     if (reason === 'placed') {
       if (state.seats === 2) {
-        return seatName(state.turn) + ' to move. Click only the leaks on that line.';
+        return seatName(state.turn) + ' moves next. Place a piece only on the gold marks for that line.';
       }
       var leaks = state.players[0].leaks.length;
       if (leaks === 0) {
-        return 'No leak is left on the board. Open the valve if the gauge is connected. An opening off the edge still loses.';
+        return 'Nothing is left open on the board. If the gauge is connected, open the valve. If a pipe runs off the edge, the line is not finished.';
       }
-      return 'The leak moved to the new open end. ' + leaks + (leaks === 1 ? ' cell is' : ' cells are') + ' marked.';
+      return 'The open end moved. ' + leaks + (leaks === 1 ? ' gold mark shows' : ' gold marks show') + ' where you can play next.';
     }
     if (reason === 'discarded') {
       if (state.seats === 2) {
-        return 'Piece discarded. ' + seatName(state.turn) + ' to move.';
+        return 'That piece is gone, and a new one took its place. ' + seatName(state.turn) + ' moves next.';
       }
-      return 'Piece discarded and replaced. The line did not change.';
+      return 'That piece is gone, and a new one took its place. The line itself did not change.';
     }
     if (reason === 'fitted') {
-      return 'This piece now opens toward the gold mark. Click the marked cell to lay it.';
+      return 'This piece now opens toward the gold mark. Click the marked cell to place it.';
     }
     if (reason === 'none') {
-      return 'None of these pieces can meet that leak. Discard one to draw another.';
+      return 'None of these pieces can meet that opening. Discard one and you will draw another.';
     }
     if (reason === 'sealed') {
-      var who = state.seats === 2 ? seatName(state.winner) + ' is sealed. ' : 'Sealed. ';
-      return who + 'Every opening meets another opening, and the gauge is in the line.';
+      if (state.seats === 2) {
+        return seatName(state.winner) + ' finished the line. Every opening meets another opening, and the gauge is connected.';
+      }
+      return 'The line is sealed. Every opening meets another opening, and the gauge is connected.';
     }
     if (reason === 'leak') {
       if (state.seats === 2) {
-        return seatName(state.winner) + ' takes the match. The valve was opened before the line was sealed.';
+        return seatName(state.winner) + ' wins. The valve was opened before the line was sealed.';
       }
-      return 'The valve opened onto an unfinished line. A bare opening, including one that leaves the board, loses the seat.';
+      return 'The valve opened while the line was still unfinished. Any bare opening, including one that leaves the board, means the line is lost.';
     }
     if (reason === 'concede') {
       if (state.seats === 2) {
-        return seatName(state.winner) + ' takes the match. The other seat conceded.';
+        return seatName(state.winner) + ' wins. The other person gave up the line.';
       }
-      return 'Line conceded. Reset to try another route.';
+      return 'You gave up this line. Start a new board when you want another route.';
     }
     return startMessage();
   }
@@ -164,8 +259,15 @@
     var winnerColor = state.winner == null ? null : PALETTE[state.winner];
     statusEl.textContent = text;
     turnEl.textContent = state.over
-      ? (state.result === 'sealed' ? 'Line sealed' : 'Line open')
+      ? (state.result === 'sealed' ? 'Line sealed' : 'Line still open')
       : seatName(state.turn) + ' to move';
+    boardEl.dataset.seed = String(state.seed);
+    boardEl.dataset.route = (state.solutions[0] || []).map(function (step) {
+      return step.x + ',' + step.y;
+    }).join(' ');
+    if (state.result === 'sealed') {
+      showCelebration();
+    }
 
     boardEl.style.setProperty('--cols', String(state.size + 2));
     boardEl.style.setProperty('--rows', String(state.size));
@@ -197,7 +299,9 @@
     });
 
     var selected = seat.hand[seat.selected];
-    compassEl.textContent = state.over ? 'The hand is closed.' : describeOpenings(selected.openings);
+    compassEl.textContent = state.over
+      ? 'The hand is closed for this board.'
+      : describeOpenings(selected.openings);
 
     var frozen = locked || state.over;
     fitButton.disabled = frozen;
@@ -299,26 +403,28 @@
     render(messageFor(result.reason, game.getState()));
   }
 
-  function boot(text) {
+  function boot() {
     generation += 1;
     locked = false;
     lastPlaced = null;
-    game = Throughline.createGame({ seats: seats, seed: (Date.now() ^ (seats * 97)) >>> 0 });
-    render(text || startMessage());
+    clearCelebration();
+    game = Throughline.createGame({ seats: seats, seed: nextSeed() });
+    render(startMessage());
     document.getElementById('mode-solo').setAttribute('aria-pressed', seats === 1 ? 'true' : 'false');
     document.getElementById('mode-hotseat').setAttribute('aria-pressed', seats === 2 ? 'true' : 'false');
   }
 
   document.getElementById('mode-solo').addEventListener('click', function () {
     seats = 1;
-    boot(startMessage());
+    boot();
   });
   document.getElementById('mode-hotseat').addEventListener('click', function () {
     seats = 2;
-    boot('Two seats, one board. The upper line moves first. Pass the device when the turn changes. Nothing is sent to a server.');
+    boot();
   });
   document.getElementById('reset').addEventListener('click', function () {
-    boot(startMessage());
+    unlockAudio();
+    boot();
   });
   fitButton.addEventListener('click', function () {
     if (locked) {
@@ -333,7 +439,7 @@
     }
     game.rotate();
     var piece = currentSeat(game.getState()).hand[currentSeat(game.getState()).selected];
-    render(describeOpenings(piece.openings) + ' Place it on the gold mark, or rotate again.');
+    render(describeOpenings(piece.openings) + ' Place it on the gold mark, or rotate it again.');
   });
   discardButton.addEventListener('click', function () {
     if (locked) {
@@ -347,8 +453,10 @@
     if (locked) {
       return;
     }
-    var result = game.openValve();
-    render(messageFor(result.reason, game.getState()));
+    unlockAudio().then(function () {
+      var result = game.openValve();
+      render(messageFor(result.reason, game.getState()));
+    });
   });
   concedeButton.addEventListener('click', function () {
     if (locked) {
@@ -358,7 +466,33 @@
     render(messageFor(result.reason, game.getState()));
   });
   document.getElementById('watch').addEventListener('click', function () {
-    playSealedLine();
+    unlockAudio().then(function () {
+      playSealedLine();
+    });
+  });
+  document.getElementById('sound').addEventListener('click', function () {
+    var button = document.getElementById('sound');
+    var bed = document.getElementById('bed');
+    unlockAudio();
+    if (!bed.paused) {
+      bed.pause();
+      button.setAttribute('aria-pressed', 'false');
+      button.textContent = 'Sound';
+      return;
+    }
+    var started = bed.play();
+    var markOn = function () {
+      button.setAttribute('aria-pressed', 'true');
+      button.textContent = 'Sound on';
+    };
+    if (started && typeof started.then === 'function') {
+      started.then(markOn).catch(function () {
+        button.setAttribute('aria-pressed', 'false');
+        button.textContent = 'Sound unavailable';
+      });
+      return;
+    }
+    markOn();
   });
 
   function delay(ms) {
@@ -373,12 +507,13 @@
     seats = 1;
     locked = true;
     lastPlaced = null;
-    game = Throughline.createGame({ seats: 1, seed: 11 });
+    clearCelebration();
+    game = Throughline.createGame({ seats: 1, seed: nextSeed() });
     var local = game;
     document.getElementById('mode-solo').setAttribute('aria-pressed', 'true');
     document.getElementById('mode-hotseat').setAttribute('aria-pressed', 'false');
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var steps = Throughline.UPPER_LINE;
+    var steps = local.getState().solutions[0];
 
     if (reduced) {
       steps.forEach(function (step) {
@@ -390,7 +525,7 @@
       return;
     }
 
-    render('Building a sealed line from the source to the gauge.');
+    render('Here is one way to finish this board, from the source to the gauge.');
     (async function () {
       for (var i = 0; i < steps.length; i++) {
         if (token !== generation) {
@@ -407,7 +542,7 @@
         }
         local.scriptedPlace(step);
         lastPlaced = { x: step.x, y: step.y };
-        render('The line grows along the open end.');
+        render('The line follows the open end.');
         await delay(420);
       }
       if (token !== generation) {
@@ -419,5 +554,9 @@
     })();
   }
 
-  boot(startMessage());
+  var bed = document.getElementById('bed');
+  if (bed) {
+    bed.volume = 0.35;
+  }
+  boot();
 })();
